@@ -36,6 +36,34 @@
             padding: 0;
             box-sizing: border-box;
         }
+        
+        /* Custom Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--black);
+            border: 1px solid rgba(255, 255, 0, 0.2);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--yellow);
+            border-radius: 6px;
+            border: 2px solid var(--black);
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FFD700;
+            box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+        }
+        
+        /* Firefox Scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--yellow) var(--black);
+        }
 
         body {
             background: var(--black);
@@ -545,20 +573,6 @@
             }
         }
 
-        .payment-qr {
-            width: 200px;
-            height: 200px;
-            margin: 30px auto;
-            background: var(--white);
-            padding: 10px;
-            border-radius: 10px;
-        }
-
-        #qrcode {
-            width: 100%;
-            height: 100%;
-        }
-
         /* Footer */
         footer {
             padding: 60px 0;
@@ -598,6 +612,90 @@
             box-shadow: 0 10px 30px rgba(255, 255, 0, 0.5);
         }
 
+        /* Payment Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .modal-content {
+            background: var(--dark-gray);
+            border: 2px solid var(--yellow);
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 95vh;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(255, 255, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .payment-info {
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex: 1;
+            padding-right: 5px;
+        }
+        
+        /* Hide scrollbar but keep functionality */
+        .payment-info::-webkit-scrollbar {
+            width: 0;
+            display: none;
+        }
+        
+        .payment-info {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .payment-qr {
+            text-align: center;
+            margin: 15px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        
+        #qrcode {
+            display: block;
+            padding: 0;
+            background: transparent;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto;
+            width: fit-content;
+        }
+        
+        #qrcode img,
+        #qrcode canvas {
+            display: block !important;
+            margin: 0 auto !important;
+            border: none !important;
+            padding: 0 !important;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+        
+        /* Ensure only first QR code element is visible */
+        #qrcode > *:not(:first-child) {
+            display: none !important;
+        }
+        
         /* Responsive - Small phones like iPhone SE */
         @media (max-width: 375px) {
             .container {
@@ -644,9 +742,59 @@
             
             /* Modal optimization */
             .modal-content {
-                padding: 20px !important;
-                margin: 10px !important;
-                width: calc(100% - 20px) !important;
+                padding: 15px 10px !important;
+                margin: 5px !important;
+                width: calc(100% - 10px) !important;
+                max-height: calc(100vh - 10px) !important;
+            }
+            
+            .modal-content h3 {
+                font-size: 1rem !important;
+                margin-bottom: 10px !important;
+                letter-spacing: 1px !important;
+            }
+            
+            .payment-info > div {
+                margin: 10px 0 !important;
+                padding: 12px 8px !important;
+                border-radius: 12px !important;
+            }
+            
+            #paymentAmount {
+                font-size: 0.9rem !important;
+                padding: 8px !important;
+            }
+            
+            #paymentAddress {
+                font-size: 0.6rem !important;
+                padding: 8px 6px !important;
+                line-height: 1.4 !important;
+            }
+            
+            .payment-info button {
+                padding: 5px 10px !important;
+                font-size: 0.65rem !important;
+            }
+            
+            .payment-info > div:last-of-type {
+                font-size: 0.7rem !important;
+                padding: 10px !important;
+                letter-spacing: 0 !important;
+            }
+            
+            .payment-info > div:last-of-type span {
+                font-size: 0.65rem !important;
+            }
+            
+            #closeModal {
+                top: 5px !important;
+                right: 5px !important;
+                font-size: 1rem !important;
+                width: 25px !important;
+                height: 25px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
             
             .modal-content h3 {
@@ -665,6 +813,18 @@
             
             /* Stats optimization */
             .stat-number {
+                font-size: 1.5rem !important;
+            }
+            
+            .stat-card {
+                padding: 20px !important;
+            }
+            
+            .stat-label {
+                font-size: 0.75rem !important;
+            }
+            
+            .mint-status-text {
                 font-size: 1.5rem !important;
             }
             
@@ -786,6 +946,28 @@
                 gap: 20px;
             }
             
+            /* Fix % sold visibility on mobile */
+            .mint-status-text {
+                font-size: 1.4rem !important;
+                margin-bottom: 20px !important;
+            }
+            
+            .stats-section {
+                padding-top: 120px !important;
+            }
+            
+            .stat-card {
+                padding: 25px !important;
+            }
+            
+            .stat-number {
+                font-size: 2.2rem !important;
+            }
+            
+            .stat-label {
+                font-size: 0.8rem !important;
+            }
+            
             .purchase-form {
                 padding: 30px 20px !important;
                 border-radius: 20px;
@@ -804,13 +986,41 @@
             .modal-content {
                 width: 95% !important;
                 max-width: none !important;
-                margin: 20px !important;
-                padding: 30px 20px !important;
+                margin: 10px !important;
+                padding: 30px 15px !important;
+                max-height: 95vh !important;
             }
             
-            .payment-qr {
-                width: 200px !important;
-                height: 200px !important;
+            .modal-content h3 {
+                font-size: 1.4rem !important;
+                margin-bottom: 20px !important;
+            }
+            
+            .payment-info > div {
+                margin: 20px 0 !important;
+                padding: 20px 15px !important;
+            }
+            
+            #paymentAmount {
+                font-size: 1.2rem !important;
+                padding: 12px !important;
+            }
+            
+            #paymentAddress {
+                font-size: 0.75rem !important;
+                padding: 12px !important;
+                line-height: 1.6 !important;
+            }
+            
+            .payment-info button {
+                padding: 8px 15px !important;
+                font-size: 0.8rem !important;
+            }
+            
+            #closeModal {
+                top: 10px !important;
+                right: 10px !important;
+                font-size: 1.5rem !important;
             }
             
             /* Navigation */
@@ -990,31 +1200,39 @@
     <div class="modal" id="paymentModal">
         <div class="modal-content">
             <button style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--yellow); font-size: 2rem; cursor: pointer;" id="closeModal">&times;</button>
-            <h3 style="text-align: center; margin-bottom: 30px; color: var(--yellow); font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px;">Bitcoin Payment</h3>
+            <h3 style="text-align: center; margin-bottom: 20px; color: var(--yellow); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px;">Bitcoin Payment</h3>
             
-            <div class="payment-info">
-                <div class="payment-qr" id="qrCodeContainer">
-                    <div id="qrcode"></div>
+            <div class="payment-info" style="text-align: center; width: 100%;">
+                <div class="payment-qr" id="qrCodeContainer" style="width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                    <div style="background: #000; padding: 15px; border-radius: 10px; border: 2px solid var(--yellow);">
+                        <div id="qrcode" style="margin: 0 auto;"></div>
+                    </div>
                 </div>
                 
-                <div style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 0, 0.2); border-radius: 15px; padding: 25px; margin: 30px 0;">
-                    <p style="margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">Send exactly:</p>
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; color: var(--yellow); margin: 15px 0; padding: 15px; background: rgba(255, 255, 0, 0.05); border-radius: 10px; cursor: pointer;" id="paymentAmount" onclick="copyAmount()">
+                <div style="background: rgba(255, 255, 0, 0.05); border: 2px solid rgba(255, 255, 0, 0.3); border-radius: 15px; padding: 20px; margin: 20px 0;">
+                    <p style="margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--yellow); font-weight: 600; font-size: 0.9rem;">Send exactly:</p>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; color: var(--yellow); margin: 10px 0; padding: 12px; background: rgba(0, 0, 0, 0.8); border: 1px solid var(--yellow); border-radius: 12px; cursor: pointer; transition: all 0.3s;" id="paymentAmount" onclick="copyAmount()">
                         0.00002000 BTC
                     </div>
                     
-                    <p style="margin-bottom: 15px; margin-top: 25px; text-transform: uppercase; letter-spacing: 1px;">To address:</p>
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; word-break: break-all; margin: 15px 0; padding: 15px; background: rgba(255, 255, 0, 0.05); border-radius: 10px; cursor: pointer;" id="paymentAddress" onclick="copyAddress()">
+                    <p style="margin-bottom: 10px; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; color: var(--yellow); font-weight: 600; font-size: 0.9rem;">To address:</p>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; word-break: break-all; margin: 10px 0; padding: 12px; background: rgba(0, 0, 0, 0.8); border: 1px solid var(--yellow); border-radius: 12px; cursor: pointer; transition: all 0.3s; line-height: 1.4;" id="paymentAddress" onclick="copyAddress()">
                         bc1qpaymentaddress...
+                    </div>
+                    
+                    <div style="display: flex; gap: 8px; justify-content: center; margin-top: 15px; flex-wrap: wrap;">
+                        <button onclick="copyAmount()" style="background: transparent; border: 1px solid var(--yellow); color: var(--yellow); padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; transition: all 0.3s; flex: 1; min-width: 100px;" onmouseover="this.style.background='var(--yellow)'; this.style.color='var(--black)'" onmouseout="this.style.background='transparent'; this.style.color='var(--yellow)'" ontouchstart="this.style.background='var(--yellow)'; this.style.color='var(--black)'" ontouchend="this.style.background='transparent'; this.style.color='var(--yellow)'">Copy Amount</button>
+                        <button onclick="copyAddress()" style="background: transparent; border: 1px solid var(--yellow); color: var(--yellow); padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; transition: all 0.3s; flex: 1; min-width: 100px;" onmouseover="this.style.background='var(--yellow)'; this.style.color='var(--black)'" onmouseout="this.style.background='transparent'; this.style.color='var(--yellow)'" ontouchstart="this.style.background='var(--yellow)'; this.style.color='var(--black)'" ontouchend="this.style.background='transparent'; this.style.color='var(--yellow)'">Copy Address</button>
                     </div>
                 </div>
                 
-                <div style="border: 2px solid var(--yellow); padding: 20px; text-align: center; text-transform: uppercase; letter-spacing: 1px; margin-top: 30px;">
-                    Send EXACTLY the amount shown. Incorrect amounts cannot be processed.
+                <div style="border: 2px solid var(--yellow); background: rgba(255, 255, 0, 0.02); padding: 15px; text-align: center; text-transform: uppercase; letter-spacing: 1px; border-radius: 12px; font-weight: 600; font-size: 0.85rem;">
+                    ⚡ Send EXACTLY the amount shown ⚡<br>
+                    <span style="font-size: 0.75rem; opacity: 0.8; text-transform: none; letter-spacing: normal;">Incorrect amounts cannot be processed</span>
                 </div>
                 
-                <p style="text-align: center; margin-top: 30px; color: rgba(255, 255, 255, 0.6);">
-                    Waiting for payment confirmation...
+                <p style="text-align: center; margin-top: 20px; margin-bottom: 10px; color: rgba(255, 255, 255, 0.7); font-size: 0.85rem;">
+                    <span style="display: inline-block; animation: pulse 2s infinite;">⚡</span> Waiting for payment confirmation...
                 </p>
             </div>
         </div>
@@ -1180,18 +1398,35 @@
         // QR Code generation
         function generateQRCode(address, amount) {
             const qrContainer = document.getElementById('qrcode');
-            qrContainer.innerHTML = ''; // Clear previous QR
+            // Clear any existing QR codes
+            while (qrContainer.firstChild) {
+                qrContainer.removeChild(qrContainer.firstChild);
+            }
             
-            const bitcoinUri = `bitcoin:${address}?amount=${amount}&label=RGBLightCat%20Token%20Purchase`;
+            // Format amount properly (no scientific notation)
+            const formattedAmount = amount.toFixed(8);
+            const bitcoinUri = `bitcoin:${address}?amount=${formattedAmount}`;
             
-            new QRCode(qrContainer, {
-                text: bitcoinUri,
-                width: 180,
-                height: 180,
-                colorDark: '#000000',
-                colorLight: '#FFFFFF',
-                correctLevel: QRCode.CorrectLevel.H
-            });
+            // Calculate optimal QR code size based on viewport
+            const viewportWidth = window.innerWidth;
+            const qrSize = viewportWidth <= 375 ? 160 : 
+                           viewportWidth <= 768 ? 180 : 
+                           200;
+            
+            // Create QR code
+            try {
+                new QRCode(qrContainer, {
+                    text: bitcoinUri,
+                    width: qrSize,
+                    height: qrSize,
+                    colorDark: "#000000",
+                    colorLight: "#FFFFFF",
+                    correctLevel: QRCode.CorrectLevel.L
+                });
+            } catch (error) {
+                console.error('QR Code generation error:', error);
+                qrContainer.innerHTML = `<p style="color: var(--yellow); padding: 20px;">QR Code generation failed. Please copy the address manually.</p>`;
+            }
         }
 
         // Payment modal functions
@@ -1258,6 +1493,11 @@
             @keyframes slideOut {
                 from { transform: translateX(0); opacity: 1; }
                 to { transform: translateX(100%); opacity: 0; }
+            }
+            @keyframes pulse {
+                0% { opacity: 1; transform: scale(1); }
+                50% { opacity: 0.5; transform: scale(1.1); }
+                100% { opacity: 1; transform: scale(1); }
             }
         `;
         document.head.appendChild(notifStyle);
@@ -1427,6 +1667,203 @@
                     }
                 });
             }
+            
+            // Purchase Form Handling
+            const purchaseForm = document.getElementById('purchaseForm');
+            const decreaseBtn = document.getElementById('decreaseBatch');
+            const increaseBtn = document.getElementById('increaseBatch');
+            const batchCountEl = document.getElementById('batchCount');
+            const totalBTCEl = document.getElementById('totalBTC');
+            const totalSatsEl = document.getElementById('totalSats');
+            const tokenAmountEl = document.getElementById('tokenAmount');
+            const maxBatchesEl = document.getElementById('maxBatches');
+            const closeModalBtn = document.getElementById('closeModal');
+            
+            // Constants
+            const PRICE_PER_BATCH_BTC = 0.00002;
+            const TOKENS_PER_BATCH = 700;
+            const PRICE_PER_BATCH_SATS = 2000;
+            
+            // State
+            let currentBatches = 1;
+            let maxBatches = 5; // Default, will be updated based on game tier
+            
+            // Check for unlocked tier from game
+            const urlParams = new URLSearchParams(window.location.search);
+            const unlockedTier = urlParams.get('tier') || localStorage.getItem('unlockedTier');
+            
+            if (unlockedTier) {
+                switch(unlockedTier.toLowerCase()) {
+                    case 'bronze':
+                        maxBatches = 5;
+                        break;
+                    case 'silver':
+                        maxBatches = 8;
+                        break;
+                    case 'gold':
+                        maxBatches = 10;
+                        break;
+                    default:
+                        maxBatches = 5;
+                }
+                maxBatchesEl.textContent = maxBatches;
+                
+                // Highlight the unlocked tier
+                const tierMap = { bronze: 'tier1', silver: 'tier2', gold: 'tier3' };
+                const tierCard = document.getElementById(tierMap[unlockedTier.toLowerCase()]);
+                if (tierCard) {
+                    tierCard.classList.add('unlocked');
+                }
+            }
+            
+            // Update display
+            function updateBatchDisplay() {
+                batchCountEl.textContent = currentBatches;
+                const totalBTC = (currentBatches * PRICE_PER_BATCH_BTC).toFixed(8);
+                const totalSats = currentBatches * PRICE_PER_BATCH_SATS;
+                const totalTokens = currentBatches * TOKENS_PER_BATCH;
+                
+                totalBTCEl.textContent = totalBTC + ' BTC';
+                totalSatsEl.textContent = totalSats.toLocaleString();
+                tokenAmountEl.textContent = totalTokens.toLocaleString();
+                
+                // Update button states
+                decreaseBtn.disabled = currentBatches <= 1;
+                increaseBtn.disabled = currentBatches >= maxBatches;
+            }
+            
+            // Batch controls
+            decreaseBtn.addEventListener('click', () => {
+                if (currentBatches > 1) {
+                    currentBatches--;
+                    updateBatchDisplay();
+                }
+            });
+            
+            increaseBtn.addEventListener('click', () => {
+                if (currentBatches < maxBatches) {
+                    currentBatches++;
+                    updateBatchDisplay();
+                }
+            });
+            
+            // Form submission
+            purchaseForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const walletAddress = document.getElementById('walletAddress').value.trim();
+                
+                // Basic validation
+                if (!walletAddress) {
+                    showNotification('Please enter your Bitcoin wallet address');
+                    return;
+                }
+                
+                // Validate Bitcoin address format (basic check)
+                if (!walletAddress.startsWith('bc1') && !walletAddress.startsWith('1') && !walletAddress.startsWith('3')) {
+                    showNotification('Please enter a valid Bitcoin address');
+                    return;
+                }
+                
+                // Disable submit button
+                const submitBtn = purchaseForm.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'CREATING INVOICE...';
+                
+                try {
+                    // Create invoice data
+                    const invoiceData = {
+                        walletAddress: walletAddress,
+                        batches: currentBatches,
+                        amount: currentBatches * PRICE_PER_BATCH_BTC,
+                        tokens: currentBatches * TOKENS_PER_BATCH
+                    };
+                    
+                    // For demo purposes, we'll use a static payment address
+                    // In production, this would call the backend API
+                    const paymentAddress = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
+                    
+                    const invoice = {
+                        invoiceId: 'INV-' + Date.now(),
+                        paymentAddress: paymentAddress,
+                        amountBTC: invoiceData.amount,
+                        amountSats: currentBatches * PRICE_PER_BATCH_SATS,
+                        tokens: invoiceData.tokens,
+                        walletAddress: invoiceData.walletAddress,
+                        status: 'pending',
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    // Show payment modal
+                    showPaymentModal(invoice);
+                    
+                    // Store invoice for reference
+                    localStorage.setItem('currentInvoice', JSON.stringify(invoice));
+                    
+                    // Start payment verification polling (mock)
+                    startPaymentVerification(invoice.invoiceId);
+                    
+                } catch (error) {
+                    console.error('Error creating invoice:', error);
+                    showNotification('Error creating invoice. Please try again.');
+                } finally {
+                    // Re-enable submit button
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'CREATE INVOICE';
+                }
+            });
+            
+            // Payment verification (mock)
+            function startPaymentVerification(invoiceId) {
+                let checkCount = 0;
+                const maxChecks = 120; // 10 minutes at 5 second intervals
+                
+                const verificationInterval = setInterval(() => {
+                    checkCount++;
+                    
+                    // In production, this would check with the backend
+                    // For demo, we'll just update the status text
+                    const statusText = document.querySelector('#paymentModal p:last-child');
+                    if (statusText) {
+                        statusText.textContent = `Waiting for payment confirmation... (${checkCount * 5}s)`;
+                    }
+                    
+                    if (checkCount >= maxChecks) {
+                        clearInterval(verificationInterval);
+                        if (statusText) {
+                            statusText.textContent = 'Payment verification timeout. Please contact support if you have sent payment.';
+                            statusText.style.color = '#ff5252';
+                        }
+                    }
+                }, 5000);
+                
+                // Store interval ID for cleanup
+                window.currentVerificationInterval = verificationInterval;
+            }
+            
+            // Modal close
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', () => {
+                    document.getElementById('paymentModal').style.display = 'none';
+                    // Clear verification interval if exists
+                    if (window.currentVerificationInterval) {
+                        clearInterval(window.currentVerificationInterval);
+                    }
+                });
+            }
+            
+            // Close modal on outside click
+            document.getElementById('paymentModal').addEventListener('click', (e) => {
+                if (e.target.id === 'paymentModal') {
+                    document.getElementById('paymentModal').style.display = 'none';
+                    if (window.currentVerificationInterval) {
+                        clearInterval(window.currentVerificationInterval);
+                    }
+                }
+            });
+            
+            // Initialize display
+            updateBatchDisplay();
         });
     </script>
 </body>
