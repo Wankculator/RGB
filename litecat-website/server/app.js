@@ -17,6 +17,7 @@ const gameRoutes = require('./routes/game');
 const adminRoutes = require('./routes/admin');
 const webhookRoutes = require('./routes/webhooks');
 const healthRoutes = require('./routes/health');
+const rgbRoutes = require('./routes/rgbRoutes');
 
 // Initialize Express app
 const app = express();
@@ -100,6 +101,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/rgb', rgbRoutes);
 
 // Serve client application
 app.get('*', (req, res) => {

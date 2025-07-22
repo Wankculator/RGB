@@ -169,7 +169,7 @@ class LightcatGame {
         const clickTime = localStorage.getItem('followClickTime');
         
         if (!followClicked) {
-            alert('Please click "Follow @LIGHTCAT" first');
+            alert('Please click "Follow @RGBLightCat" first');
             return;
         }
         
@@ -182,20 +182,32 @@ class LightcatGame {
         
         // Simulate verification success
         setTimeout(() => {
-            document.getElementById('unlock-tier').style.display = 'inline-block';
-            document.getElementById('verify-follow').textContent = '✓ Verified';
-            document.getElementById('verify-follow').disabled = true;
-            document.getElementById('verify-follow').style.opacity = '0.5';
-            document.getElementById('verify-follow').style.borderColor = '#4CAF50';
-            document.getElementById('verify-follow').style.color = '#4CAF50';
+            // Update verify button
+            const verifyBtn = document.getElementById('verify-follow');
+            verifyBtn.textContent = '✓ Verified';
+            verifyBtn.disabled = true;
+            verifyBtn.style.opacity = '0.7';
+            verifyBtn.style.borderColor = '#4CAF50';
+            verifyBtn.style.color = '#4CAF50';
+            verifyBtn.style.cursor = 'default';
             
             // Show success message
-            const successMsg = document.createElement('p');
-            successMsg.textContent = 'Follow verified! You can now claim your tier.';
-            successMsg.style.color = '#4CAF50';
-            successMsg.style.marginTop = 'var(--spacing-sm)';
-            successMsg.style.fontSize = '0.875rem';
-            document.getElementById('twitter-verify').appendChild(successMsg);
+            const verifySuccessEl = document.getElementById('verify-success');
+            if (verifySuccessEl) {
+                verifySuccessEl.style.display = 'block';
+            }
+            
+            // Show unlock button and allocation message
+            const unlockBtn = document.getElementById('unlock-tier');
+            const allocationMsg = document.getElementById('allocation-message');
+            
+            if (unlockBtn) {
+                unlockBtn.style.display = 'block';
+            }
+            
+            if (allocationMsg) {
+                allocationMsg.style.display = 'block';
+            }
         }, 500);
     }
 
@@ -205,8 +217,14 @@ class LightcatGame {
         localStorage.setItem('unlockedTier', tier);
         localStorage.setItem('gameScore', this.score);
         
-        // Redirect to main page with tier unlocked
-        window.location.href = '/?tier=' + tier.toLowerCase();
+        // Check if we're in an iframe
+        if (window.parent !== window) {
+            // We're in an iframe, redirect the parent window
+            window.parent.location.href = '/#purchase?tier=' + tier.toLowerCase();
+        } else {
+            // We're not in an iframe (mobile direct access), redirect normally
+            window.location.href = '/#purchase?tier=' + tier.toLowerCase();
+        }
     }
 
     updateProgress(percent, text) {

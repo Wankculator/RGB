@@ -234,4 +234,5 @@ module.exports = {
   validators,
   sanitizeInput,
   handleValidationErrors,
+  validateRequest: handleValidationErrors
 };

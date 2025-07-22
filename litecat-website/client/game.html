@@ -140,7 +140,8 @@
             background: var(--primary-black);
             display: none;
             z-index: 300;
-            overflow: hidden;
+            overflow-y: auto;
+            padding: 20px;
         }
         
         .game-over-content {
@@ -150,16 +151,87 @@
             transform: translate(-50%, -50%);
             text-align: center;
             width: 90%;
-            max-width: 350px;
-            padding: var(--spacing-md);
+            max-width: 400px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         @media (max-width: 768px) {
-            .game-over-content h1 {
-                font-size: 2.5rem;
+            #game-over {
+                padding: 5px;
             }
+            
+            .game-over-content {
+                padding: 10px;
+                max-width: 100%;
+                max-height: 95vh;
+            }
+            
+            .game-over-content h2 {
+                font-size: 1.3rem;
+                margin-bottom: 5px;
+                letter-spacing: 1px;
+            }
+            
             .game-over-content .final-score {
-                font-size: 2rem;
+                font-size: 1.1rem;
+                margin-bottom: 8px;
+            }
+            
+            .game-over-content .final-score img {
+                width: 18px;
+                height: 18px;
+            }
+            
+            .tier-unlocked {
+                font-size: 1rem !important;
+                margin-bottom: 10px !important;
+            }
+            
+            #twitter-verify {
+                padding: 10px !important;
+                margin-bottom: 10px !important;
+            }
+            
+            #twitter-verify p {
+                font-size: 0.7rem !important;
+                margin-bottom: 5px !important;
+            }
+            
+            .twitter-button {
+                padding: 5px 15px !important;
+                font-size: 0.75rem !important;
+                margin-bottom: 5px !important;
+            }
+            
+            #verify-success {
+                padding: 6px !important;
+                margin-top: 5px !important;
+            }
+            
+            #verify-success p {
+                font-size: 0.75rem !important;
+            }
+            
+            #allocation-message {
+                font-size: 0.75rem !important;
+                padding: 6px !important;
+                margin-top: 5px !important;
+                line-height: 1.3 !important;
+            }
+            
+            button.btn {
+                padding: 8px 20px !important;
+                font-size: 0.85rem !important;
+            }
+            
+            /* Reduce gaps in button container */
+            .game-over-content > div:last-child {
+                gap: 8px !important;
+                margin-top: 10px !important;
             }
         }
 
@@ -539,8 +611,11 @@
 </head>
 <body>
     <div id="game-container">
-        <!-- Back button for mobile -->
-        <a href="index.html" style="position: fixed; top: 10px; right: 10px; z-index: 1000; padding: 10px 20px; background: rgba(0,0,0,0.95); border: 2px solid var(--primary-yellow); border-radius: 25px; color: var(--primary-yellow); text-decoration: none; font-size: 0.9rem; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.8); font-weight: 600; backdrop-filter: blur(10px);" id="backButton">← Back</a>
+        <!-- Navigation buttons -->
+        <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
+            <!-- Back button only -->
+            <a href="index.html" style="padding: 10px 20px; background: rgba(0,0,0,0.95); border: 2px solid var(--primary-yellow); border-radius: 25px; color: var(--primary-yellow); text-decoration: none; font-size: 0.9rem; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.8); font-weight: 600; backdrop-filter: blur(10px);" id="backButton">← Back</a>
+        </div>
         
         <!-- Loading Screen -->
         <div id="loading-progress">
@@ -580,42 +655,68 @@
         <!-- Game Over Screen -->
         <div id="game-over">
             <div class="game-over-content">
-                <div class="final-score" style="font-size: 1.75rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                    <img src="images/RGB_LITE_CAT_LOGO.jpg" alt="" style="width: 28px; height: 28px;"> <span id="final-score">0</span>
+                <!-- Thank you message -->
+                <h2 style="color: var(--primary-yellow); font-size: 1.6rem; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 2px;">
+                    Thank You for Playing!
+                </h2>
+                
+                <!-- Score display -->
+                <div class="final-score" style="font-size: 1.3rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <img src="images/RGB_LITE_CAT_LOGO.jpg" alt="" style="width: 22px; height: 22px;"> 
+                    <span id="final-score">0</span>
                 </div>
                 
-                <div class="tier-unlocked" id="tier-unlocked" style="font-size: 1.125rem; margin-bottom: 1rem;">No Tier Unlocked</div>
+                <!-- Tier unlocked -->
+                <div class="tier-unlocked" id="tier-unlocked" style="font-size: 1.15rem; margin-bottom: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                    No Tier Unlocked
+                </div>
                 
-                <div id="twitter-verify" style="margin-bottom: 1rem;">
-                    <p style="color: #ccc; margin-bottom: 0.5rem; font-size: 0.8rem;">To claim your tier allocation:</p>
-                    <h3 style="color: var(--primary-yellow); margin-bottom: 0.75rem; font-size: 0.9rem;">
-                        Follow @LIGHTCAT on X
-                    </h3>
+                <!-- Twitter verification section -->
+                <div id="twitter-verify" style="margin-bottom: 15px; background: rgba(255,255,0,0.05); border: 1px solid rgba(255,255,0,0.3); border-radius: 10px; padding: 12px;">
+                    <p style="color: #ccc; margin-bottom: 6px; font-size: 0.75rem;">To unlock your allocation:</p>
                     
-                    <a href="https://x.com/intent/follow?screen_name=LIGHTCAT" 
+                    <a href="https://x.com/intent/follow?screen_name=RGBLightCat" 
                        class="twitter-button" 
                        id="twitter-follow" 
                        target="_blank"
-                       style="padding: 0.25rem 0.75rem; font-size: 0.8rem; display: inline-block; margin-bottom: 0.25rem;">
-                        Follow @LIGHTCAT
+                       style="padding: 8px 20px; font-size: 0.85rem; display: inline-block; margin-bottom: 8px; border-radius: 5px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 5px;">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        Follow @RGBLightCat
                     </a>
                     
-                    <p style="color: #666; font-size: 0.7rem; margin-top: 0.25rem; margin-bottom: 0.5rem;">
-                        Click follow, then verify to unlock
+                    <p style="color: #888; font-size: 0.75rem; margin-bottom: 8px;">
+                        Click follow, then verify
                     </p>
                     
-                    <button class="twitter-button" id="verify-follow" style="background: transparent; cursor: pointer; padding: 0.25rem 0.75rem; font-size: 0.8rem;">
+                    <button class="twitter-button" id="verify-follow" style="background: transparent; cursor: pointer; padding: 8px 20px; font-size: 0.85rem; border-radius: 5px;">
                         Verify Follow
                     </button>
+                    
+                    <!-- Success message (hidden by default) -->
+                    <div id="verify-success" style="display: none; margin-top: 10px; padding: 10px; background: rgba(76,175,80,0.1); border: 1px solid #4CAF50; border-radius: 5px;">
+                        <p style="color: #4CAF50; font-size: 0.85rem; margin: 0;">
+                            ✓ Verified! You can now claim your tier allocation.
+                        </p>
+                    </div>
                 </div>
 
-                <button class="btn btn-primary" id="play-again" style="padding: var(--spacing-sm) var(--spacing-lg); font-size: 1rem; background: transparent; border: 2px solid var(--primary-yellow); color: var(--primary-yellow); transition: all 0.3s;">
-                    Play Again
-                </button>
-                
-                <button class="btn btn-secondary" id="unlock-tier" style="display: none; margin-top: var(--spacing-xs); padding: var(--spacing-sm) var(--spacing-lg); font-size: 1rem;">
-                    Proceed to Claim
-                </button>
+                <!-- Action buttons -->
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 15px;">
+                    <button class="btn btn-primary" id="play-again" style="padding: 10px 25px; font-size: 0.9rem; background: transparent; border: 2px solid var(--primary-yellow); color: var(--primary-yellow); transition: all 0.3s; border-radius: 8px; font-weight: 600;">
+                        Play Again
+                    </button>
+                    
+                    <button class="btn btn-secondary" id="unlock-tier" style="display: none; padding: 10px 25px; font-size: 0.9rem; background: var(--primary-yellow); color: var(--primary-black); border: 2px solid var(--primary-yellow); border-radius: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                        Claim Your Allocation
+                    </button>
+                    
+                    <!-- Pro allocation message (hidden by default) -->
+                    <p id="allocation-message" style="display: none; font-size: 0.8rem; color: var(--primary-yellow); margin-top: 8px; padding: 8px; background: rgba(255,255,0,0.1); border-radius: 5px; border: 1px solid rgba(255,255,0,0.3); line-height: 1.4;">
+                        <!-- Dynamic message will be inserted here -->
+                    </p>
+                </div>
             </div>
         </div>
 

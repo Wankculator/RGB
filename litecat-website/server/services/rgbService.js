@@ -73,7 +73,7 @@ class RGBService {
           website: 'https://litecat.xyz',
           whitepaper: 'https://litecat.xyz/whitepaper.pdf',
           social: {
-            twitter: '@litecattoken',
+            twitter: '@RGBLightCat',
             telegram: 't.me/litecattoken',
           },
         },
@@ -93,63 +93,66 @@ class RGBService {
     }
   }
 
-  async transfer(options) {
+  async createTransfer(options) {
     const {
-      walletAddress,
+      invoice,
       amount,
-      bitcoinTxid,
-      memo = '',
+      assetId = this.assetId,
     } = options;
 
     try {
-      const blindingKey = await this.generateBlindingKey();
+      const transferId = crypto.randomBytes(16).toString('hex');
       
       if (this.mockMode) {
         // Mock implementation for development
-        const transferId = `mock-transfer-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
-        const consignment = crypto.randomBytes(64).toString('hex');
+        const mockTransferId = `mock-transfer-${transferId}`;
+        
+        // Create mock consignment data
+        const mockConsignment = Buffer.concat([
+          Buffer.from('RGB_CONSIGNMENT_V1'),
+          crypto.randomBytes(32), // Contract ID
+          Buffer.from([0x01]), // Version
+          crypto.randomBytes(64), // Transfer data
+          Buffer.from(invoice),
+          Buffer.alloc(8),
+          Buffer.from(amount.toString())
+        ]);
+
+        // Create mock PSBT
+        const mockPsbt = Buffer.from('cHNidP8BAHECAAAAAeJQR2wrAAAAAA==', 'base64').toString('base64');
         
         // Store mock transfer
-        this.mockData.transfers.set(transferId, {
-          transferId,
-          walletAddress,
+        this.mockData.transfers.set(mockTransferId, {
+          transferId: mockTransferId,
+          invoice,
           amount,
-          bitcoinTxid,
+          assetId,
           status: 'pending',
           timestamp: new Date().toISOString()
         });
         
-        // Update mock balance
-        const currentBalance = this.mockData.balances.get(walletAddress) || 0;
-        this.mockData.balances.set(walletAddress, currentBalance + amount);
-        
         logger.info('[MOCK] RGB transfer created:', {
-          transferId,
-          walletAddress,
+          transferId: mockTransferId,
+          invoice,
           amount
         });
         
         return {
-          transferId,
-          consignment,
-          blindingKey,
-          psbt: 'mock-psbt-' + crypto.randomBytes(32).toString('hex'),
-          status: 'pending'
+          transferId: mockTransferId,
+          consignment: mockConsignment,
+          psbt: mockPsbt,
+          disclosure: `RGB Transfer ${mockTransferId}\nAmount: ${amount}\nInvoice: ${invoice}`,
+          assetId,
+          amount,
+          invoice,
+          created_at: new Date()
         };
       }
       
       const transferData = {
-        asset_id: this.assetId,
+        asset_id: assetId,
         amount,
-        recipient: {
-          address: walletAddress,
-          blinding_key: blindingKey,
-        },
-        bitcoin_outpoint: {
-          txid: bitcoinTxid,
-          vout: 0,
-        },
-        memo,
+        recipient_invoice: invoice,
         fee_rate: 5,
       };
 
@@ -159,19 +162,84 @@ class RGBService {
       
       logger.info('RGB transfer created:', {
         transferId: response.transfer_id,
-        consignment: response.consignment.substring(0, 50) + '...',
+        consignment: response.consignment ? response.consignment.substring(0, 50) + '...' : 'N/A',
       });
       
       return {
         transferId: response.transfer_id,
-        consignment: response.consignment,
-        blindingKey,
+        consignment: Buffer.from(response.consignment, 'hex'),
         psbt: response.psbt,
-        status: 'pending',
+        disclosure: response.disclosure,
+        assetId,
+        amount,
+        invoice,
+        created_at: new Date()
       };
     } catch (error) {
       logger.error('Failed to create RGB transfer:', error);
       throw error;
+    }
+  }
+
+  async getConsignment(transferId) {
+    try {
+      // For mock transfers
+      if (transferId.startsWith('mock-transfer-')) {
+        const transfer = this.mockData.transfers.get(transferId);
+        if (!transfer) {
+          throw new Error('Transfer not found');
+        }
+        
+        // Generate deterministic mock consignment based on transfer ID
+        const hash = crypto.createHash('sha256').update(transferId).digest();
+        
+        return Buffer.concat([
+          Buffer.from('RGB_CONSIGNMENT_V1'),
+          hash,
+          Buffer.from([0x01]),
+          crypto.randomBytes(128),
+          Buffer.from(transferId)
+        ]);
+      }
+
+      const response = await this.makeRequest(`/transfers/${transferId}/consignment`, 'GET');
+      return Buffer.from(response.consignment, 'hex');
+
+    } catch (error) {
+      logger.error('Error getting consignment:', error);
+      throw error;
+    }
+  }
+
+  validateRGBInvoice(invoice) {
+    try {
+      // Basic format validation
+      if (!invoice || typeof invoice !== 'string') {
+        return false;
+      }
+
+      // Check for RGB invoice formats
+      // Format 1: rgb:<base64>
+      if (invoice.startsWith('rgb:')) {
+        const base64Part = invoice.substring(4);
+        return /^[A-Za-z0-9+/]+=*$/.test(base64Part);
+      }
+
+      // Format 2: rgb:utxob:<blinded_utxo>
+      if (invoice.includes('utxob:')) {
+        return true;
+      }
+
+      // Format 3: RGB20 invoice format
+      if (invoice.startsWith('rgb20:')) {
+        return true;
+      }
+
+      return false;
+
+    } catch (error) {
+      logger.error('Error validating RGB invoice:', error);
+      return false;
     }
   }
 

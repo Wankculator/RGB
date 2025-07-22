@@ -16,12 +16,18 @@ export class GameUI {
         const twitterVerifyEl = document.getElementById('twitter-verify');
         const unlockTierBtn = document.getElementById('unlock-tier');
         const verifyBtn = document.getElementById('verify-follow');
+        const verifySuccessEl = document.getElementById('verify-success');
+        const allocationMessageEl = document.getElementById('allocation-message');
         
         // Reset verify button state
         verifyBtn.textContent = 'Verify Follow';
         verifyBtn.disabled = false;
         verifyBtn.style.opacity = '1';
+        verifyBtn.style.borderColor = 'var(--primary-yellow)';
+        verifyBtn.style.color = 'var(--primary-yellow)';
         unlockTierBtn.style.display = 'none';
+        verifySuccessEl.style.display = 'none';
+        allocationMessageEl.style.display = 'none';
         
         // Show final score
         finalScoreEl.textContent = score;
@@ -38,9 +44,29 @@ export class GameUI {
             
             // Store tier data
             this.unlockedTier = tier;
+            
+            // Set allocation message based on tier
+            const tierBatches = {
+                bronze: 3,
+                silver: 5,
+                gold: 10
+            };
+            const tierTokens = {
+                bronze: '2,100',
+                silver: '3,500',
+                gold: '7,000'
+            };
+            
+            allocationMessageEl.innerHTML = `
+                <strong style="color: ${this.getTierColor(tier)}; text-transform: uppercase;">
+                    ${tier} Tier Benefits:
+                </strong><br>
+                You can now purchase up to ${tierBatches[tier]} batches (${tierTokens[tier]} LIGHTCAT tokens) 
+                in a single transaction!
+            `;
         } else {
             tierUnlockedEl.textContent = 'No Tier Unlocked - Try Again!';
-            tierUnlockedEl.style.color = '#666';
+            tierUnlockedEl.style.color = '#888';
             twitterVerifyEl.style.display = 'none';
         }
         

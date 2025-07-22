@@ -459,6 +459,166 @@ class EmailService {
       }
     });
   }
+
+  async sendConsignmentReady(data) {
+    const { email, invoiceId, tokenAmount, downloadUrl } = data;
+    
+    const content = `
+      <h2 style="color: #FFFF00; text-align: center;">Your LIGHTCAT Tokens Are Ready!</h2>
+      
+      <p>Your LIGHTCAT token purchase has been confirmed and your RGB consignment is ready for download.</p>
+      
+      <div style="background: #1a1a1a; border: 2px solid #FFFF00; border-radius: 10px; padding: 20px; margin: 20px 0;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2);">
+              <span style="color: rgba(255, 255, 255, 0.7);">Invoice ID</span>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2); text-align: right;">
+              <span style="color: #FFFF00; font-weight: bold; font-family: monospace;">${invoiceId}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2);">
+              <span style="color: rgba(255, 255, 255, 0.7);">Token Amount</span>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2); text-align: right;">
+              <span style="color: #FFFF00; font-weight: bold; font-family: monospace;">${tokenAmount.toLocaleString()} LIGHTCAT</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0;">
+              <span style="color: rgba(255, 255, 255, 0.7);">Download Available</span>
+            </td>
+            <td style="padding: 10px 0; text-align: right;">
+              <span style="color: #FFFF00; font-weight: bold; font-family: monospace;">7 days</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${downloadUrl}" class="button" style="background: #FFFF00; color: #000; padding: 15px 40px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block; text-transform: uppercase;">Download Consignment</a>
+      </div>
+      
+      <div style="background: rgba(255, 0, 0, 0.1); border: 1px solid #FF5252; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <strong>Important:</strong>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+          <li>Download your consignment within 7 days</li>
+          <li>Save the file securely - this is your proof of ownership</li>
+          <li>Use an RGB-compatible wallet to import the consignment</li>
+          <li>Keep a backup of your consignment file</li>
+        </ul>
+      </div>
+      
+      <h3 style="color: #FFFF00; margin-top: 30px;">Next Steps</h3>
+      <ol style="line-height: 1.8;">
+        <li>Download the consignment file using the button above</li>
+        <li>Open your RGB-compatible wallet</li>
+        <li>Import the consignment file</li>
+        <li>Your LIGHTCAT tokens will appear in your wallet</li>
+      </ol>
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject: 'Your LIGHTCAT Tokens Are Ready!',
+      template: 'consignment-ready',
+      data: {
+        content,
+        ...data
+      }
+    });
+  }
+
+  async sendLightningInvoice(data) {
+    const { email, invoiceId, lightningInvoice, amountSats, amountBTC, batches, tokens, expiresAt } = data;
+    
+    const expiryTime = new Date(expiresAt).toLocaleString();
+    
+    const content = `
+      <h2 style="color: #FFFF00; text-align: center;">Lightning Invoice Created</h2>
+      
+      <p>Your LIGHTCAT token purchase invoice has been created. Please complete the payment within 30 minutes.</p>
+      
+      <div style="background: #1a1a1a; border: 2px solid #FFFF00; border-radius: 10px; padding: 20px; margin: 20px 0;">
+        <h3 style="color: #FFFF00; margin-bottom: 15px;">Purchase Details</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2);">
+              <span style="color: rgba(255, 255, 255, 0.7);">Invoice ID</span>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2); text-align: right;">
+              <span style="color: #FFFF00; font-weight: bold; font-family: monospace;">${invoiceId}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2);">
+              <span style="color: rgba(255, 255, 255, 0.7);">Batches</span>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2); text-align: right;">
+              <span style="color: #FFFF00; font-weight: bold; font-family: monospace;">${batches}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2);">
+              <span style="color: rgba(255, 255, 255, 0.7);">Token Amount</span>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2); text-align: right;">
+              <span style="color: #FFFF00; font-weight: bold; font-family: monospace;">${tokens.toLocaleString()} LIGHTCAT</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2);">
+              <span style="color: rgba(255, 255, 255, 0.7);">Amount Due</span>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2); text-align: right;">
+              <span style="color: #FFFF00; font-weight: bold; font-family: monospace;">${amountBTC} BTC (${amountSats.toLocaleString()} sats)</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0;">
+              <span style="color: rgba(255, 255, 255, 0.7);">Expires At</span>
+            </td>
+            <td style="padding: 10px 0; text-align: right;">
+              <span style="color: #FF5252; font-weight: bold;">${expiryTime}</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+      <div style="background: #1a1a1a; border: 2px solid #FFFF00; border-radius: 10px; padding: 20px; margin: 20px 0;">
+        <h3 style="color: #FFFF00; margin-bottom: 15px;">Lightning Invoice</h3>
+        <p style="word-break: break-all; font-family: monospace; font-size: 12px; line-height: 1.5; color: #FFFF00;">
+          ${lightningInvoice}
+        </p>
+      </div>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <p style="color: rgba(255, 255, 255, 0.7);">Copy the Lightning invoice above and pay using your Lightning wallet</p>
+      </div>
+      
+      <div style="background: rgba(255, 0, 0, 0.1); border: 1px solid #FF5252; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <strong>Important:</strong>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+          <li>Payment must be completed within 30 minutes</li>
+          <li>Once paid, your RGB consignment will be generated automatically</li>
+          <li>You will receive an email when your tokens are ready</li>
+          <li>NO REFUNDS - All sales are final</li>
+        </ul>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject: `Lightning Invoice - LIGHTCAT Purchase #${invoiceId}`,
+      template: 'lightning-invoice',
+      data: {
+        content,
+        ...data
+      }
+    });
+  }
 }
 
 module.exports = new EmailService();

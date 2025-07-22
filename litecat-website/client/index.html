@@ -317,13 +317,19 @@
         .stat-card {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 0, 0.1);
-            padding: 40px;
+            padding: 40px 20px;
             border-radius: 20px;
             transition: var(--transition);
             text-align: center;
             backdrop-filter: blur(10px);
             opacity: 0;
             transform: translateY(30px);
+            overflow: hidden;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .stat-card:hover {
@@ -334,11 +340,14 @@
         }
 
         .stat-number {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 700;
             color: var(--yellow);
             font-family: 'JetBrains Mono', monospace;
             margin-bottom: 10px;
+            word-wrap: break-word;
+            line-height: 1.2;
+            max-width: 100%;
         }
 
         .stat-label {
@@ -813,11 +822,12 @@
             
             /* Stats optimization */
             .stat-number {
-                font-size: 1.5rem !important;
+                font-size: 1.8rem !important;
             }
             
             .stat-card {
-                padding: 20px !important;
+                padding: 25px 15px !important;
+                min-height: 150px;
             }
             
             .stat-label {
@@ -957,11 +967,12 @@
             }
             
             .stat-card {
-                padding: 25px !important;
+                padding: 30px 20px !important;
+                min-height: 160px;
             }
             
             .stat-number {
-                font-size: 2.2rem !important;
+                font-size: 2rem !important;
             }
             
             .stat-label {
@@ -1053,6 +1064,11 @@
                         <a href="#game">Game</a>
                         <a href="#purchase">Purchase</a>
                         <a href="tokenomics.html">Tokenomics</a>
+                        <a href="https://twitter.com/RGBLightCat" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 5px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--yellow)" style="vertical-align: middle;">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                        </a>
                     </nav>
                 </div>
             </div>
@@ -1151,16 +1167,79 @@
             <div class="container">
                 <h2 class="section-title">PURCHASE TOKENS</h2>
                 
+                <!-- RGB Protocol Info -->
+                <div style="max-width: 800px; margin: 0 auto 40px; text-align: center;">
+                    <p style="color: rgba(255, 255, 255, 0.8); font-size: 1rem; line-height: 1.6; margin-bottom: 20px;">
+                        LIGHTCAT uses the RGB Protocol - a revolutionary Bitcoin Layer 2 technology that enables smart contracts 
+                        and token issuance with client-side validation. Your tokens are secured by Bitcoin's network.
+                        We recommend using <strong style="color: var(--yellow);">Bitcoin Tribe wallet</strong> for the best RGB experience.
+                    </p>
+                    <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+                        <div style="padding: 15px 25px; background: rgba(255, 255, 0, 0.1); border: 1px solid rgba(255, 255, 0, 0.3); border-radius: 10px;">
+                            <strong style="color: var(--yellow);">Self-Custody</strong>
+                            <p style="margin: 5px 0 0; font-size: 0.85rem; color: rgba(255,255,255,0.7);">You control your tokens</p>
+                        </div>
+                        <div style="padding: 15px 25px; background: rgba(255, 255, 0, 0.1); border: 1px solid rgba(255, 255, 0, 0.3); border-radius: 10px;">
+                            <strong style="color: var(--yellow);">Lightning Fast</strong>
+                            <p style="margin: 5px 0 0; font-size: 0.85rem; color: rgba(255,255,255,0.7);">Instant payments via LN</p>
+                        </div>
+                        <div style="padding: 15px 25px; background: rgba(255, 255, 0, 0.1); border: 1px solid rgba(255, 255, 0, 0.3); border-radius: 10px;">
+                            <strong style="color: var(--yellow);">Bitcoin Secured</strong>
+                            <p style="margin: 5px 0 0; font-size: 0.85rem; color: rgba(255,255,255,0.7);">Protected by Bitcoin</p>
+                        </div>
+                    </div>
+                </div>
+                
                 <form class="purchase-form" id="purchaseForm">
                     <div class="form-group">
-                        <label class="form-label" style="display: block; margin-bottom: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Bitcoin Wallet Address</label>
+                        <label class="form-label" style="display: block; margin-bottom: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">RGB Invoice</label>
                         <input 
                             type="text" 
                             class="form-input" 
-                            id="walletAddress" 
-                            placeholder="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+                            id="rgbInvoice" 
+                            placeholder="rgb:utxob:WiUyMWVkN..."
                             required
                         >
+                        <div style="margin-top: 15px; padding: 15px; background: rgba(255, 255, 0, 0.05); border: 1px solid rgba(255, 255, 0, 0.2); border-radius: 10px;">
+                            <p style="color: var(--yellow); font-weight: 600; margin-bottom: 10px; font-size: 0.9rem;">
+                                How to get your RGB Invoice:
+                            </p>
+                            <ol style="color: rgba(255, 255, 255, 0.8); font-size: 0.85rem; margin: 0; padding-left: 20px; line-height: 1.8;">
+                                <li>Download Bitcoin Tribe wallet (recommended RGB wallet)</li>
+                                <li>Open the app and navigate to "Receive" or "RGB Assets"</li>
+                                <li>Select "Create RGB Invoice" or "Receive RGB20 Tokens"</li>
+                                <li>Copy the generated invoice (starts with "rgb:")</li>
+                                <li>Paste it here to receive your LIGHTCAT tokens</li>
+                            </ol>
+                            <div style="margin-top: 12px; padding: 10px; background: rgba(255, 255, 0, 0.1); border: 1px solid rgba(255, 255, 0, 0.3); border-radius: 8px;">
+                                <p style="margin: 0; color: var(--yellow); font-weight: 600; font-size: 0.85rem;">
+                                    Recommended RGB Wallet:
+                                </p>
+                                <p style="margin: 5px 0; font-size: 0.8rem;">
+                                    <strong style="color: #fff;">Bitcoin Tribe RGB</strong> - Full RGB protocol support with Lightning integration
+                                </p>
+                                <div style="margin-top: 8px;">
+                                    <a href="https://bitcointribe.app/" target="_blank" style="color: var(--yellow); text-decoration: underline; font-size: 0.8rem; margin-right: 15px;">Download Bitcoin Tribe</a>
+                                    <a href="https://play.google.com/store/apps/details?id=com.bithyve.tribe" target="_blank" style="color: var(--yellow); text-decoration: underline; font-size: 0.8rem;">Google Play</a>
+                                </div>
+                            </div>
+                            <p style="margin-top: 10px; color: rgba(255, 255, 255, 0.6); font-size: 0.75rem;">
+                                Other RGB wallets: Iris, MyCitadel, BitMask • More info: <a href="https://rgb.tech/wallets" target="_blank" style="color: var(--yellow); text-decoration: underline;">rgb.tech/wallets</a>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 30px;">
+                        <label class="form-label" style="display: block; margin-bottom: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Email (Optional)</label>
+                        <input 
+                            type="email" 
+                            class="form-input" 
+                            id="emailAddress" 
+                            placeholder="your@email.com"
+                        >
+                        <p style="margin-top: 10px; color: rgba(255, 255, 255, 0.6); font-size: 0.85rem;">
+                            Receive download link for your consignment
+                        </p>
                     </div>
                     
                     <div class="form-group" style="margin-top: 40px;">
@@ -1184,7 +1263,7 @@
                     </div>
                     
                     <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem;">
-                        CREATE INVOICE
+                        CREATE LIGHTNING INVOICE
                     </button>
                 </form>
             </div>
@@ -1201,7 +1280,7 @@
     <div class="modal" id="paymentModal">
         <div class="modal-content">
             <button style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--yellow); font-size: 2rem; cursor: pointer;" id="closeModal">&times;</button>
-            <h3 style="text-align: center; margin-bottom: 20px; color: var(--yellow); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px;">Bitcoin Payment</h3>
+            <h3 style="text-align: center; margin-bottom: 20px; color: var(--yellow); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px;">Lightning Payment</h3>
             
             <div class="payment-info" style="text-align: center; width: 100%;">
                 <div class="payment-qr" id="qrCodeContainer" style="width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
@@ -1211,30 +1290,36 @@
                 </div>
                 
                 <div style="background: rgba(255, 255, 0, 0.05); border: 2px solid rgba(255, 255, 0, 0.3); border-radius: 15px; padding: 20px; margin: 20px 0;">
-                    <p style="margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--yellow); font-weight: 600; font-size: 0.9rem;">Send exactly:</p>
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; color: var(--yellow); margin: 10px 0; padding: 12px; background: rgba(0, 0, 0, 0.8); border: 1px solid var(--yellow); border-radius: 12px; cursor: pointer; transition: all 0.3s;" id="paymentAmount" onclick="copyAmount()">
-                        0.00002000 BTC
+                    <p style="margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--yellow); font-weight: 600; font-size: 0.9rem;">Amount to pay:</p>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; color: var(--yellow); margin: 10px 0; padding: 12px; background: rgba(0, 0, 0, 0.8); border: 1px solid var(--yellow); border-radius: 12px;">
+                        <span id="paymentAmount">0.00002000 BTC</span><br>
+                        <span style="font-size: 0.9rem; opacity: 0.8;">(<span id="paymentSats">2,000</span> sats)</span>
                     </div>
                     
-                    <p style="margin-bottom: 10px; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; color: var(--yellow); font-weight: 600; font-size: 0.9rem;">To address:</p>
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; word-break: break-all; margin: 10px 0; padding: 12px; background: rgba(0, 0, 0, 0.8); border: 1px solid var(--yellow); border-radius: 12px; cursor: pointer; transition: all 0.3s; line-height: 1.4;" id="paymentAddress" onclick="copyAddress()">
-                        bc1qpaymentaddress...
+                    <p style="margin-bottom: 10px; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; color: var(--yellow); font-weight: 600; font-size: 0.9rem;">Lightning Invoice:</p>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; word-break: break-all; margin: 10px 0; padding: 12px; background: rgba(0, 0, 0, 0.8); border: 1px solid var(--yellow); border-radius: 12px; cursor: pointer; transition: all 0.3s; line-height: 1.4; max-height: 100px; overflow-y: auto;" id="lightningInvoice" onclick="copyInvoice()">
+                        Loading...
                     </div>
                     
                     <div style="display: flex; gap: 8px; justify-content: center; margin-top: 15px; flex-wrap: wrap;">
-                        <button onclick="copyAmount()" style="background: transparent; border: 1px solid var(--yellow); color: var(--yellow); padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; transition: all 0.3s; flex: 1; min-width: 100px;" onmouseover="this.style.background='var(--yellow)'; this.style.color='var(--black)'" onmouseout="this.style.background='transparent'; this.style.color='var(--yellow)'" ontouchstart="this.style.background='var(--yellow)'; this.style.color='var(--black)'" ontouchend="this.style.background='transparent'; this.style.color='var(--yellow)'">Copy Amount</button>
-                        <button onclick="copyAddress()" style="background: transparent; border: 1px solid var(--yellow); color: var(--yellow); padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; transition: all 0.3s; flex: 1; min-width: 100px;" onmouseover="this.style.background='var(--yellow)'; this.style.color='var(--black)'" onmouseout="this.style.background='transparent'; this.style.color='var(--yellow)'" ontouchstart="this.style.background='var(--yellow)'; this.style.color='var(--black)'" ontouchend="this.style.background='transparent'; this.style.color='var(--yellow)'">Copy Address</button>
+                        <button onclick="copyInvoice()" style="background: transparent; border: 1px solid var(--yellow); color: var(--yellow); padding: 8px 20px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; transition: all 0.3s;" onmouseover="this.style.background='var(--yellow)'; this.style.color='var(--black)'" onmouseout="this.style.background='transparent'; this.style.color='var(--yellow)'">Copy Invoice</button>
                     </div>
                 </div>
                 
                 <div style="border: 2px solid var(--yellow); background: rgba(255, 255, 0, 0.02); padding: 15px; text-align: center; text-transform: uppercase; letter-spacing: 1px; border-radius: 12px; font-weight: 600; font-size: 0.85rem;">
-                    ⚡ Send EXACTLY the amount shown ⚡<br>
-                    <span style="font-size: 0.75rem; opacity: 0.8; text-transform: none; letter-spacing: normal;">Incorrect amounts cannot be processed</span>
+                    ⚡ Pay with Lightning Network ⚡<br>
+                    <span style="font-size: 0.75rem; opacity: 0.8; text-transform: none; letter-spacing: normal;">Invoice expires in 30 minutes</span>
                 </div>
                 
                 <p style="text-align: center; margin-top: 20px; margin-bottom: 10px; color: rgba(255, 255, 255, 0.7); font-size: 0.85rem;">
-                    <span style="display: inline-block; animation: pulse 2s infinite;">⚡</span> Waiting for payment confirmation...
+                    <span style="display: inline-block; animation: pulse 2s infinite;">⚡</span> <span id="paymentStatus">Waiting for payment...</span>
                 </p>
+                
+                <div id="consignmentReady" style="display: none; margin-top: 20px; padding: 20px; background: rgba(0, 255, 0, 0.1); border: 2px solid #00FF00; border-radius: 10px;">
+                    <h4 style="color: #00FF00; margin-bottom: 10px;">Payment Confirmed!</h4>
+                    <p style="margin-bottom: 15px;">Your RGB consignment is ready.</p>
+                    <button onclick="downloadConsignment()" class="btn" style="background: #00FF00; color: #000;">Download Consignment</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1396,17 +1481,13 @@
         `;
         document.head.appendChild(style);
 
-        // QR Code generation
-        function generateQRCode(address, amount) {
+        // QR Code generation for Lightning
+        function generateLightningQR(lightningInvoice) {
             const qrContainer = document.getElementById('qrcode');
             // Clear any existing QR codes
             while (qrContainer.firstChild) {
                 qrContainer.removeChild(qrContainer.firstChild);
             }
-            
-            // Format amount properly (no scientific notation)
-            const formattedAmount = amount.toFixed(8);
-            const bitcoinUri = `bitcoin:${address}?amount=${formattedAmount}`;
             
             // Calculate optimal QR code size based on viewport
             const viewportWidth = window.innerWidth;
@@ -1417,7 +1498,7 @@
             // Create QR code
             try {
                 new QRCode(qrContainer, {
-                    text: bitcoinUri,
+                    text: lightningInvoice,
                     width: qrSize,
                     height: qrSize,
                     colorDark: "#000000",
@@ -1426,7 +1507,7 @@
                 });
             } catch (error) {
                 console.error('QR Code generation error:', error);
-                qrContainer.innerHTML = `<p style="color: var(--yellow); padding: 20px;">QR Code generation failed. Please copy the address manually.</p>`;
+                qrContainer.innerHTML = `<p style="color: var(--yellow); padding: 20px;">QR Code generation failed. Please copy the invoice manually.</p>`;
             }
         }
 
@@ -1436,29 +1517,20 @@
             
             // Update modal content
             document.getElementById('paymentAmount').textContent = invoice.amountBTC.toFixed(8) + ' BTC';
-            document.getElementById('paymentAddress').textContent = invoice.paymentAddress;
+            document.getElementById('paymentSats').textContent = invoice.amountSats.toLocaleString();
+            document.getElementById('lightningInvoice').textContent = invoice.lightningInvoice;
             
-            // Generate QR code
-            generateQRCode(invoice.paymentAddress, invoice.amountBTC);
+            // Reset consignment section
+            document.getElementById('consignmentReady').style.display = 'none';
+            document.getElementById('paymentStatus').textContent = 'Waiting for payment...';
+            
+            // Generate QR code for Lightning invoice
+            generateLightningQR(invoice.lightningInvoice);
             
             // Show modal
             modal.style.display = 'flex';
         };
 
-        // Copy functions
-        window.copyAddress = function() {
-            const address = document.getElementById('paymentAddress').textContent;
-            navigator.clipboard.writeText(address).then(() => {
-                showNotification('Address copied to clipboard');
-            });
-        };
-
-        window.copyAmount = function() {
-            const amount = document.getElementById('paymentAmount').textContent.replace(' BTC', '');
-            navigator.clipboard.writeText(amount).then(() => {
-                showNotification('Amount copied to clipboard');
-            });
-        };
 
         // Notification system
         function showNotification(message) {
@@ -1499,6 +1571,14 @@
                 0% { opacity: 1; transform: scale(1); }
                 50% { opacity: 0.5; transform: scale(1.1); }
                 100% { opacity: 1; transform: scale(1); }
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                to { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
             }
         `;
         document.head.appendChild(notifStyle);
@@ -1716,6 +1796,54 @@
                 if (tierCard) {
                     tierCard.classList.add('unlocked');
                 }
+                
+                // Show tier unlock notification if coming from game
+                if (urlParams.get('tier')) {
+                    // Scroll to purchase section
+                    setTimeout(() => {
+                        document.getElementById('purchase').scrollIntoView({ behavior: 'smooth' });
+                        
+                        // Show special notification
+                        const notification = document.createElement('div');
+                        notification.style.cssText = `
+                            position: fixed;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            background: #000;
+                            border: 3px solid var(--yellow);
+                            padding: 40px;
+                            border-radius: 20px;
+                            z-index: 9999;
+                            text-align: center;
+                            max-width: 500px;
+                            animation: fadeIn 0.5s ease;
+                        `;
+                        notification.innerHTML = `
+                            <h2 style="color: var(--yellow); font-size: 2rem; margin-bottom: 20px; text-transform: uppercase;">
+                                ${unlockedTier.toUpperCase()} TIER UNLOCKED!
+                            </h2>
+                            <p style="font-size: 1.2rem; color: #fff; margin-bottom: 30px;">
+                                Congratulations! You can now purchase up to <span style="color: var(--yellow); font-weight: bold;">${maxBatches} batches</span> of LIGHTCAT tokens.
+                            </p>
+                            <button onclick="this.parentElement.remove()" style="background: var(--yellow); color: #000; border: none; padding: 15px 40px; font-size: 1rem; font-weight: bold; border-radius: 50px; cursor: pointer; text-transform: uppercase;">
+                                Start Purchasing
+                            </button>
+                        `;
+                        document.body.appendChild(notification);
+                        
+                        // Auto-remove after 5 seconds
+                        setTimeout(() => {
+                            if (notification.parentElement) {
+                                notification.style.animation = 'fadeOut 0.5s ease';
+                                setTimeout(() => notification.remove(), 500);
+                            }
+                        }, 5000);
+                    }, 500);
+                    
+                    // Clear URL parameter
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
             }
             
             // Update display
@@ -1759,36 +1887,37 @@
                     return;
                 }
                 
-                const walletAddress = document.getElementById('walletAddress').value.trim();
+                const rgbInvoice = document.getElementById('rgbInvoice').value.trim();
+                const email = document.getElementById('emailAddress').value.trim();
                 
                 // Basic validation
-                if (!walletAddress) {
-                    showNotification('Please enter your Bitcoin wallet address');
+                if (!rgbInvoice) {
+                    showNotification('Please enter your RGB invoice');
                     return;
                 }
                 
-                // Validate Bitcoin address format (basic check)
-                if (!walletAddress.startsWith('bc1') && !walletAddress.startsWith('1') && !walletAddress.startsWith('3')) {
-                    showNotification('Please enter a valid Bitcoin address');
+                // Validate RGB invoice format (basic check)
+                if (!rgbInvoice.startsWith('rgb:') && !rgbInvoice.includes('utxob:')) {
+                    showNotification('Please enter a valid RGB invoice');
                     return;
                 }
                 
                 // Disable submit button
                 const submitBtn = purchaseForm.querySelector('button[type="submit"]');
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'CREATING INVOICE...';
+                submitBtn.textContent = 'CREATING LIGHTNING INVOICE...';
                 
                 try {
                     // Create invoice via API
-                    const response = await fetch('/api/payments/create-invoice', {
+                    const response = await fetch('/api/rgb/invoice', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            walletAddress: walletAddress,
-                            batches: currentBatches,
-                            tier: unlockedTier || 'none'
+                            rgbInvoice: rgbInvoice,
+                            email: email,
+                            batchCount: currentBatches
                         })
                     });
                     
@@ -1807,7 +1936,7 @@
                     localStorage.setItem('currentInvoice', JSON.stringify(invoice));
                     
                     // Start payment verification polling
-                    startPaymentVerification(invoice.invoiceId);
+                    startPaymentVerification(invoice.id);
                     
                 } catch (error) {
                     console.error('Error creating invoice:', error);
@@ -1815,55 +1944,56 @@
                 } finally {
                     // Re-enable submit button
                     submitBtn.disabled = false;
-                    submitBtn.textContent = 'CREATE INVOICE';
+                    submitBtn.textContent = 'CREATE LIGHTNING INVOICE';
                 }
             });
             
             // Payment verification
             function startPaymentVerification(invoiceId) {
                 let checkCount = 0;
-                const maxChecks = 120; // 10 minutes at 5 second intervals
+                const maxChecks = 360; // 30 minutes at 5 second intervals
                 
                 const verificationInterval = setInterval(async () => {
                     checkCount++;
                     
                     try {
-                        const response = await fetch(`/api/payments/verify/${invoiceId}`, {
-                            method: 'POST'
-                        });
+                        const response = await fetch(`/api/rgb/invoice/${invoiceId}/status`);
                         
                         if (!response.ok) {
                             throw new Error('Verification failed');
                         }
                         
                         const result = await response.json();
-                        const statusText = document.querySelector('#paymentModal p:last-child');
+                        const statusEl = document.getElementById('paymentStatus');
+                        const consignmentDiv = document.getElementById('consignmentReady');
                         
-                        if (result.status === 'confirmed' || result.status === 'complete') {
+                        if (result.status === 'paid' && result.paid) {
                             clearInterval(verificationInterval);
-                            if (statusText) {
-                                statusText.innerHTML = '<span style="color: #4CAF50;">✓ Payment confirmed! Tokens reserved.</span>';
+                            
+                            if (statusEl) {
+                                statusEl.innerHTML = '<span style="color: #4CAF50;">✓ Payment confirmed!</span>';
                             }
-                            showNotification('Payment confirmed! Your tokens have been reserved.');
+                            
+                            // Check if consignment is ready
+                            if (result.consignment && result.consignment.ready) {
+                                consignmentDiv.style.display = 'block';
+                                window.currentInvoiceId = invoiceId;
+                            }
+                            
+                            showNotification('Payment confirmed! Your consignment is being prepared.');
                             
                             // Update stats
                             updateMintStats();
                             
-                            // Close modal after 3 seconds
-                            setTimeout(() => {
-                                document.getElementById('paymentModal').style.display = 'none';
-                            }, 3000);
-                            
                         } else if (result.status === 'expired') {
                             clearInterval(verificationInterval);
-                            if (statusText) {
-                                statusText.textContent = 'Invoice expired. Please create a new one.';
-                                statusText.style.color = '#ff5252';
+                            if (statusEl) {
+                                statusEl.innerHTML = '<span style="color: #ff5252;">Invoice expired. Please create a new one.</span>';
                             }
                         } else {
                             // Still pending
-                            if (statusText) {
-                                statusText.textContent = `Waiting for payment confirmation... (${checkCount * 5}s)`;
+                            if (statusEl) {
+                                statusEl.textContent = `Waiting for payment... (${Math.floor(checkCount * 5 / 60)}m ${(checkCount * 5) % 60}s)`;
                             }
                         }
                         
@@ -1873,16 +2003,31 @@
                     
                     if (checkCount >= maxChecks) {
                         clearInterval(verificationInterval);
-                        const statusText = document.querySelector('#paymentModal p:last-child');
-                        if (statusText) {
-                            statusText.textContent = 'Payment verification timeout. Please contact support if you have sent payment.';
-                            statusText.style.color = '#ff5252';
+                        const statusEl = document.getElementById('paymentStatus');
+                        if (statusEl) {
+                            statusEl.innerHTML = '<span style="color: #ff5252;">Payment verification timeout.</span>';
                         }
                     }
                 }, 5000);
                 
                 // Store interval ID for cleanup
                 window.currentVerificationInterval = verificationInterval;
+            }
+            
+            // Download consignment
+            function downloadConsignment() {
+                if (window.currentInvoiceId) {
+                    window.location.href = `/api/rgb/download/${window.currentInvoiceId}`;
+                }
+            }
+            
+            // Copy Lightning invoice
+            function copyInvoice() {
+                const invoiceEl = document.getElementById('lightningInvoice');
+                if (invoiceEl && invoiceEl.textContent !== 'Loading...') {
+                    navigator.clipboard.writeText(invoiceEl.textContent);
+                    showNotification('Lightning invoice copied!');
+                }
             }
             
             // Modal close
@@ -1912,12 +2057,13 @@
             // Update mint stats from API
             async function updateMintStats() {
                 try {
-                    const response = await fetch('/api/payments/stats');
+                    const response = await fetch('/api/rgb/stats');
                     if (!response.ok) {
                         throw new Error('Failed to fetch stats');
                     }
                     
-                    const stats = await response.json();
+                    const result = await response.json();
+                    const stats = result.stats;
                     
                     // Constants - showing full 30k with team/partner allocation
                     const TOTAL_SUPPLY_BATCHES = 30000; // Full 21M tokens / 700
@@ -1927,7 +2073,7 @@
                     const PUBLIC_BATCHES = 27900;
                     
                     // Get actual public sales
-                    const publicSoldBatches = stats.batchesSold || 0;
+                    const publicSoldBatches = stats.totalBatchesSold || 0;
                     const totalAllocated = PRE_ALLOCATED + publicSoldBatches;
                     const publicRemaining = PUBLIC_BATCHES - publicSoldBatches;
                     const totalTokensAllocated = totalAllocated * 700;
