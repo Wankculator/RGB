@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test ProGame</title>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; }
+        canvas { display: block; }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">Loading...</div>
+    <canvas id="game-canvas"></canvas>
+    
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    
+    <script type="module">
+        import { ProGame } from './litecat-website/client/js/game/ProGame.js';
+        
+        const info = document.getElementById('info');
+        
+        try {
+            info.textContent = 'Creating ProGame...';
+            const canvas = document.getElementById('game-canvas');
+            const game = new ProGame(canvas);
+            
+            // Expose to window for testing
+            window.game = game;
+            
+            info.innerHTML = `
+                ProGame loaded successfully!<br>
+                Press SPACE to start<br>
+                WASD to move, SPACE to jump<br>
+                SHIFT to run, Mouse to look
+            `;
+            
+            // Start on space press
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' && !game.isPlaying) {
+                    game.start();
+                    info.innerHTML += '<br>Game started!';
+                }
+            });
+            
+        } catch (error) {
+            info.innerHTML = `Error: ${error.message}<br>${error.stack}`;
+            console.error(error);
+        }
+    </script>
+</body>
+</html>

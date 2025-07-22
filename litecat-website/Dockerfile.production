@@ -1,0 +1,62 @@
+# Production Dockerfile for LITECAT
+FROM node:20-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev for building)
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Run production build
+RUN npm run build:production
+
+# Remove dev dependencies
+RUN npm prune --production
+
+# Production image
+FROM node:20-alpine
+
+# Install production dependencies only
+RUN apk add --no-cache \
+    curl \
+    tini
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Set working directory
+WORKDIR /app
+
+# Copy built application from builder
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+
+# Create necessary directories
+RUN mkdir -p logs uploads temp && \
+    chown -R nodejs:nodejs logs uploads temp
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Use tini for proper signal handling
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Start application
+CMD ["node", "server/app.js"]

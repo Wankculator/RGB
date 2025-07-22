@@ -1,0 +1,72 @@
+{
+  "ProjectRequirementDocument": {
+    "title": "Litecat Token Website",
+    "overview": "A minimalist, secure website enabling Bitcoin payments for Litecat tokens, the first cat meme token on the RGB protocol, with real-time tracking and airdrop distribution support. The site features a gamified retro arcade game to unlock higher purchase allocations, ensuring an engaging user experience.",
+    "features": [
+      {
+        "design": {
+          "description": "Minimal black and yellow aesthetic for a professional, high-contrast look.",
+          "details": "Black background (#000000) with electric yellow (#FFFF00) or white text using Montserrat font. Clean, responsive layout with slick navigation. Include the Litecat logo (black cat with yellow lightning bolt) prominently. Integrate a retro arcade game section for gamification."
+        }
+      },
+      {
+        "paymentSystem": {
+          "description": "Invoice-based Bitcoin payments via CoinPayments.",
+          "details": "Users input their Bitcoin wallet address, select 1 to 10 batches (adjusted by game tier unlocks), and receive a unique invoice with QR code and exact amount (2,000 satoshis per batch). Verify payments in real-time; reject non-exact amounts with error messages. Integrate with RGB protocol for token issuance post-payment."
+        }
+      },
+      {
+        "supplyAndLimits": {
+          "description": "Total supply of 30,000 batches (21 million tokens).",
+          "details": "Each batch: 700 tokens at 2,000 satoshis. 5% (1,500 batches / 1.05 million tokens) reserved for developer. 28,500 batches for sale. Per-address cap: 10 batches max, but gamified unlocks via retro game tiers (Tier 1: up to 5 batches, Tier 2: up to 8, Tier 3: full 10). Track sold batches to enforce caps."
+        }
+      },
+      {
+        "database": {
+          "description": "Supabase for secure, real-time storage of purchase and airdrop data.",
+          "details": "Store wallet addresses, batch quantities, transaction IDs, payment amounts, timestamps, and game tiers. Use encrypted tables for sensitive data. Enable real-time queries for live sales tracking and airdrop preparation. Integrate authentication for admin access to export data for airdrops."
+        }
+      },
+      {
+        "liveTracking": {
+          "description": "Real-time sales tracking for transparency.",
+          "details": "Display progress bar showing remaining batches (out of 28,500). Update in real-time via Supabase subscriptions. Show 'Sold Out' message when limit reached. Include user-specific transaction status (pending/confirmed) after invoice generation."
+        }
+      },
+      {
+        "securityEnhancements": {
+          "description": "Robust measures to ensure secure and error-free transactions.",
+          "details": "Validate Bitcoin wallet addresses before invoice creation. Enforce exact payments and reject over/underpayments. Implement rate-limiting and CAPTCHA to prevent bots/spam. Use HTTPS, encrypt database connections, and add two-factor auth for admin. Limit purchases per address with game tier enforcement."
+        }
+      },
+      {
+        "userExperience": {
+          "description": "Optimized for ease and trust.",
+          "details": "Add Terms of Service and Privacy Policy pages. Send confirmation emails post-payment with transaction details. Include clear instructions, FAQ section, and wallet validation tool. Gamify with a retro arcade game (HTML5 canvas-based cat shooter) that unlocks tiers for better allocations. Ensure mobile responsiveness and accessibility (ARIA labels)."
+        }
+      },
+      {
+        "gamification": {
+          "description": "Retro arcade game to unlock purchase tiers.",
+          "details": "Embed an HTML5 canvas game mimicking an arcade cabinet (SVG-based with black/yellow theme). Players control a Litecat shooting lightning at enemies. Scores unlock tiers: 0-9 (Tier 1: 5 batches max), 10-19 (Tier 2: 8 batches), 20+ (Tier 3: 10 batches). Store tier in session/localStorage for minting. Include sound toggle and chiptune music."
+        }
+      }
+    ],
+    "revenueEstimate": {
+      "description": "Projected earnings from batch sales.",
+      "details": "28,500 batches at 2,000 satoshis each = 57 million satoshis (0.57 BTC). At current BTC price (~€101,865.30), this equals ~€58,062.62. Assumes full sell-out; developer reserve not included in sales."
+    },
+    "technicalStack": {
+      "description": "Tools and technologies for development.",
+      "details": "Frontend: HTML5, CSS (for black/yellow theme), JavaScript (Canvas for game). Backend: Node.js for server logic. Database: Supabase (real-time Postgres). Payments: CoinPayments API. RGB Integration: RGB-compatible library (e.g., rgb-lib). Development: Visual Studio Code with Copilot extension, Claude AI for code generation/debugging. Deployment: Vercel or Netlify for hosting."
+    },
+    "rgbProtocolIntegration": {
+      "description": "Support for Litecat tokens on the RGB protocol.",
+      "details": "Use RGB protocol libraries to issue tokens post-payment confirmation. Record payments in Supabase, then batch airdrop tokens to buyer addresses via RGB smart contracts. Ensure compatibility with Bitcoin wallets (e.g., no direct connection needed; use invoices)."
+    },
+    "feasibilityAndExecution": {
+      "description": "Development and deployment strategy.",
+      "details": "Feasible with AI assistance (Claude Sonnet/Opus for code, Grok for planning). Timeline: 1-2 weeks for prototype. Use VS Code for building/testing. Manual review all AI-generated code for errors. Deploy with CI/CD. Post-launch: Monitor transactions, handle airdrops manually initially."
+    }
+  }
+}

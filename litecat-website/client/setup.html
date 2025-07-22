@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Litecat - Production Setup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #FFF;
+            font-family: -apple-system, sans-serif;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FFFF00;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+        
+        h2 {
+            color: #FFFF00;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        
+        .form-section {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #BBB;
+            font-weight: 500;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #FFF;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #FFFF00;
+        }
+        
+        .help-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .button {
+            background: #FFFF00;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .button:hover {
+            background: #CCCC00;
+        }
+        
+        .warning {
+            background: #330000;
+            border: 1px solid #660000;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .success {
+            background: #003300;
+            border: 1px solid #006600;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: none;
+        }
+        
+        code {
+            background: #222;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Litecat Production Setup</h1>
+        
+        <div class="warning">
+            <strong>Important:</strong> This setup requires real service accounts and will process real Bitcoin payments. Make sure you have all the required accounts set up before proceeding.
+        </div>
+        
+        <div class="success" id="successMessage">
+            Configuration saved! Your .env file has been generated.
+        </div>
+        
+        <form id="setupForm">
+            <div class="form-section">
+                <h2>1. Bitcoin Wallet</h2>
+                <div class="form-group">
+                    <label for="btcWallet">Bitcoin Wallet Address</label>
+                    <input type="text" id="btcWallet" name="btcWallet" placeholder="bc1q..." required>
+                    <div class="help-text">The Bitcoin address where all payments will be sent</div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2>2. Supabase Database</h2>
+                <div class="form-group">
+                    <label for="supabaseUrl">Supabase URL</label>
+                    <input type="text" id="supabaseUrl" name="supabaseUrl" placeholder="https://your-project.supabase.co" required>
+                </div>
+                <div class="form-group">
+                    <label for="supabaseAnonKey">Supabase Anon Key</label>
+                    <input type="text" id="supabaseAnonKey" name="supabaseAnonKey" required>
+                </div>
+                <div class="form-group">
+                    <label for="supabaseServiceKey">Supabase Service Key</label>
+                    <input type="password" id="supabaseServiceKey" name="supabaseServiceKey" required>
+                </div>
+                <div class="help-text">Get these from your Supabase project settings → API</div>
+            </div>
+            
+            <div class="form-section">
+                <h2>3. Payment Processing (Optional for Testing)</h2>
+                <div class="form-group">
+                    <label for="coinpaymentsPublic">CoinPayments Public Key</label>
+                    <input type="text" id="coinpaymentsPublic" name="coinpaymentsPublic">
+                </div>
+                <div class="form-group">
+                    <label for="coinpaymentsPrivate">CoinPayments Private Key</label>
+                    <input type="password" id="coinpaymentsPrivate" name="coinpaymentsPrivate">
+                </div>
+                <div class="help-text">Leave empty to use manual invoice system</div>
+            </div>
+            
+            <div class="form-section">
+                <h2>4. Email Notifications (Optional)</h2>
+                <div class="form-group">
+                    <label for="sendgridKey">SendGrid API Key</label>
+                    <input type="password" id="sendgridKey" name="sendgridKey">
+                </div>
+                <div class="form-group">
+                    <label for="emailFrom">From Email</label>
+                    <input type="email" id="emailFrom" name="emailFrom" placeholder="noreply@yourdomain.com">
+                </div>
+            </div>
+            
+            <button type="submit" class="button">Generate Configuration</button>
+        </form>
+        
+        <div class="form-section" style="margin-top: 40px;">
+            <h2>Generated .env Configuration</h2>
+            <textarea id="envOutput" rows="20" readonly style="font-size: 12px;"></textarea>
+            <button onclick="copyConfig()" class="button">Copy Configuration</button>
+        </div>
+        
+        <div class="form-section">
+            <h2>Next Steps</h2>
+            <ol style="margin-left: 20px;">
+                <li>Copy the generated configuration above</li>
+                <li>Create a file named <code>.env</code> in the litecat-website directory</li>
+                <li>Paste the configuration into the .env file</li>
+                <li>Run <code>npm install</code> to install dependencies</li>
+                <li>Run <code>npm run start:production</code> to start the production server</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('setupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const config = `# Bitcoin Configuration
+BTC_WALLET_ADDRESS=${formData.get('btcWallet')}
+
+# Supabase Configuration
+SUPABASE_URL=${formData.get('supabaseUrl')}
+SUPABASE_ANON_KEY=${formData.get('supabaseAnonKey')}
+SUPABASE_SERVICE_KEY=${formData.get('supabaseServiceKey')}
+
+# CoinPayments Configuration
+COINPAYMENTS_PUBLIC_KEY=${formData.get('coinpaymentsPublic') || 'not-configured'}
+COINPAYMENTS_PRIVATE_KEY=${formData.get('coinpaymentsPrivate') || 'not-configured'}
+COINPAYMENTS_IPN_SECRET=generate-random-string-here
+COINPAYMENTS_MERCHANT_ID=your-merchant-id
+
+# Email Configuration
+SENDGRID_API_KEY=${formData.get('sendgridKey') || 'not-configured'}
+EMAIL_FROM=${formData.get('emailFrom') || 'noreply@litecat.com'}
+SUPPORT_EMAIL=support@litecat.com
+
+# RGB Protocol Configuration
+RGB_NODE_HOST=localhost
+RGB_NODE_PORT=50001
+RGB_NETWORK=bitcoin
+
+# Server Configuration
+NODE_ENV=production
+PORT=3000
+SERVER_URL=https://yourdomain.com
+
+# Security
+JWT_SECRET=${generateRandomString(32)}
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+
+# Token Sale Configuration
+TOKEN_PRICE_SATS=2000
+TOKENS_PER_BATCH=700
+MAX_BATCHES_PER_TIER=5,8,10
+TOTAL_SUPPLY=21000000
+
+# Admin Configuration
+ADMIN_EMAIL=admin@yourdomain.com
+ADMIN_PASSWORD=${generateRandomString(16)}`;
+            
+            document.getElementById('envOutput').value = config;
+            document.getElementById('successMessage').style.display = 'block';
+            
+            // Scroll to output
+            document.getElementById('envOutput').scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        function generateRandomString(length) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+        
+        function copyConfig() {
+            const textarea = document.getElementById('envOutput');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Configuration copied to clipboard!');
+        }
+    </script>
+</body>
+</html>

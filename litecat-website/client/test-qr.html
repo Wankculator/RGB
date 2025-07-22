@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>QR Code Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        #qrcode {
+            margin: 20px auto;
+            background: white;
+            padding: 10px;
+            display: inline-block;
+        }
+        button {
+            background: #FFFF00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="test-container">
+        <h1>QR Code Generation Test</h1>
+        
+        <div class="test-section">
+            <h2>Test 1: Direct QR Code Generation</h2>
+            <button onclick="testDirectQR()">Generate QR Code</button>
+            <div id="qrcode"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 2: Simulate App Flow</h2>
+            <button onclick="simulateAppFlow()">Simulate Payment Flow</button>
+            <div id="payment-modal" style="display:none; border: 2px solid yellow; padding: 20px; margin-top: 20px;">
+                <h3>Payment Modal</h3>
+                <div id="modal-qrcode"></div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Console Output</h2>
+            <div id="console-output" style="text-align: left; background: #111; padding: 10px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Override console.log to display in page
+        const consoleOutput = document.getElementById('console-output');
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ');
+            consoleOutput.innerHTML += message + '<br>';
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        };
+
+        console.log('QRCode.js loaded:', typeof QRCode !== 'undefined');
+        
+        function testDirectQR() {
+            console.log('Testing direct QR code generation...');
+            const container = document.getElementById('qrcode');
+            container.innerHTML = ''; // Clear previous
+            
+            try {
+                const qr = new QRCode(container, {
+                    text: 'bitcoin:bc1qjzzlcqhfxd745qmfdtd2vs2eggz935s5hx32fm?amount=0.00002&label=Test',
+                    width: 180,
+                    height: 180,
+                    colorDark: '#000000',
+                    colorLight: '#FFFFFF',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                console.log('QR Code generated successfully');
+            } catch (error) {
+                console.log('Error generating QR code:', error.message);
+            }
+        }
+        
+        function simulateAppFlow() {
+            console.log('Simulating app payment flow...');
+            
+            // Mock invoice data
+            const invoice = {
+                paymentAddress: 'bc1qjzzlcqhfxd745qmfdtd2vs2eggz935s5hx32fm',
+                amountBTC: 0.00002000,
+                batchCount: 1
+            };
+            
+            // Simulate the payment modal flow
+            const modal = document.getElementById('payment-modal');
+            modal.style.display = 'block';
+            
+            // Try to generate QR code like the app does
+            const qrContainer = document.getElementById('modal-qrcode');
+            qrContainer.innerHTML = '';
+            
+            const bitcoinUri = `bitcoin:${invoice.paymentAddress}?amount=${invoice.amountBTC}&label=LIGHTCAT%20Token%20Purchase`;
+            console.log('Bitcoin URI:', bitcoinUri);
+            
+            try {
+                new QRCode(qrContainer, {
+                    text: bitcoinUri,
+                    width: 180,
+                    height: 180,
+                    colorDark: '#000000',
+                    colorLight: '#FFFFFF',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                console.log('QR Code in modal generated successfully');
+            } catch (error) {
+                console.log('Error in modal QR generation:', error.message);
+            }
+        }
+        
+        // Test window.generateQRCode function availability
+        console.log('window.generateQRCode exists:', typeof window.generateQRCode !== 'undefined');
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+{
+  "name": "litecat-token-website",
+  "version": "1.0.0",
+  "description": "First cat meme token on RGB protocol with gamified Bitcoin payments",
+  "main": "server/app.js",
+  "scripts": {
+    "dev": "node scripts/dev-all.js",
+    "dev:setup": "node scripts/dev-setup.js",
+    "dev:server": "nodemon server/app.js",
+    "dev:client": "python3 -m http.server 8080 --directory client",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "webpack --mode=production",
+    "build:server": "node build/server-build.js",
+    "start": "node server/app.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint . --ext .js,.jsx",
+    "lint:fix": "eslint . --ext .js,.jsx --fix",
+    "db:migrate": "node scripts/migrate.js",
+    "db:seed": "node scripts/seed.js",
+    "deploy": "vercel --prod",
+    "security:audit": "npm audit && node scripts/security-check.js",
+    "mcp:validate-all": "node scripts/mcp-validate-all.js",
+    "mcp:watch": "node scripts/mcp-watch-all.js",
+    "mcp:security": "node scripts/check-security.js",
+    "mcp:memory": "node scripts/check-memory.js",
+    "generate:secrets": "node scripts/generate-secrets.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.7.0",
+    "helmet": "^6.1.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "@supabase/supabase-js": "^2.26.0",
+    "axios": "^1.4.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
+    "crypto": "^1.0.1",
+    "qrcode": "^1.5.3",
+    "bitcoin-address-validation": "^2.2.1",
+    "ws": "^8.13.0",
+    "node-cron": "^3.0.2",
+    "nodemailer": "^6.9.3",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22",
+    "concurrently": "^8.2.0",
+    "live-server": "^1.2.2",
+    "webpack": "^5.88.1",
+    "webpack-cli": "^5.1.4",
+    "jest": "^29.5.0",
+    "eslint": "^8.43.0",
+    "prettier": "^2.8.8",
+    "cypress": "^12.15.0",
+    "@types/node": "^20.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/litecat-website.git"
+  },
+  "keywords": [
+    "bitcoin",
+    "rgb-protocol",
+    "cryptocurrency",
+    "meme-token",
+    "arcade-game",
+    "payments"
+  ],
+  "author": "Litecat Team",
+  "license": "MIT"
+}

@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LIGHTCAT - The first cat meme token on RGB protocol">
+    <title>LIGHTCAT - RGB Protocol Token</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- GSAP for smooth animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <!-- QRCode.js for QR generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        :root {
+            --black: #000000;
+            --yellow: #FFFF00;
+            --dark-gray: #0a0a0a;
+            --medium-gray: #1a1a1a;
+            --light-gray: #2a2a2a;
+            --white: #FFFFFF;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--black);
+            color: var(--white);
+            font-family: 'Space Grotesk', -apple-system, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Three.js Background Canvas */
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+        }
+
+        /* Smooth Scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Lightning rain container */
+        .lightning-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+            opacity: 0.2;
+        }
+
+        /* Content above background */
+        .content-wrapper {
+            position: relative;
+            z-index: 2;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        /* Header */
+        header {
+            padding: 40px 0;
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.8);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: var(--transition);
+        }
+
+        header.scrolled {
+            padding: 20px 0;
+            background: rgba(0, 0, 0, 0.95);
+            box-shadow: 0 10px 30px rgba(255, 255, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .site-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--yellow);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .tagline {
+            font-size: 0.9rem;
+            margin-top: 5px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, 
+                #2a2a2a 0%,
+                #2a2a2a 40%,
+                #666666 48%,
+                #FFFF00 50%,
+                #FFFF00 52%,
+                #666666 54%,
+                #2a2a2a 62%,
+                #2a2a2a 100%
+            );
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: lightning-strike 4s ease-in-out infinite;
+        }
+
+        @keyframes lightning-strike {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            gap: 40px;
+        }
+
+        nav a {
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--yellow);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--yellow);
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Sections */
+        section {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        /* Section Titles */
+        .section-title {
+            font-size: 3rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 60px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            transition: var(--transition);
+            cursor: default;
+        }
+
+        .section-title:hover {
+            color: var(--yellow);
+            transform: translateY(-5px);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: var(--yellow);
+            transition: width 0.3s ease;
+        }
+
+        .section-title:hover::after {
+            width: 200px;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            padding-top: 150px;
+            background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 0, 0.02) 100%);
+        }
+
+        .mint-status-text {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--yellow);
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .progress-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 0, 0.2);
+            border-radius: 50px;
+            padding: 5px;
+            margin: 0 auto 60px;
+            max-width: 800px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 30px;
+            background: linear-gradient(90deg, var(--yellow) 0%, #FFD700 100%);
+            border-radius: 50px;
+            transition: width 1s ease;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 0, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            transition: var(--transition);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--yellow);
+            background: rgba(255, 255, 0, 0.05);
+            box-shadow: 0 20px 40px rgba(255, 255, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--yellow);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Game Section */
+        .game-section {
+            background: var(--dark-gray);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tier-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 60px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tier-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px solid rgba(255, 255, 0, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            transition: var(--transition);
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(30px) scale(0.9);
+        }
+
+        .tier-card:hover {
+            transform: translateY(-10px) scale(1);
+            border-color: var(--yellow);
+            background: rgba(255, 255, 0, 0.1);
+            box-shadow: 0 20px 40px rgba(255, 255, 0, 0.2);
+        }
+
+        .tier-card.unlocked {
+            border-color: var(--yellow);
+            background: rgba(255, 255, 0, 0.05);
+        }
+
+        .tier-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.3);
+            margin-bottom: 10px;
+        }
+
+        .tier-card.unlocked .tier-number {
+            color: var(--yellow);
+        }
+
+        .tier-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: transparent;
+            color: var(--yellow);
+            border: 2px solid var(--yellow);
+            padding: 15px 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--yellow);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .btn:hover {
+            color: var(--black);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 255, 0, 0.3);
+        }
+
+        .btn:hover::before {
+            left: 0;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Game Canvas */
+        .game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 0, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid rgba(255, 255, 0, 0.3);
+            border-radius: 10px;
+            background: var(--black);
+        }
+
+        /* Purchase Section */
+        .purchase-section {
+            background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 0, 0.02) 100%);
+        }
+
+        .purchase-form {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 50px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 0, 0.2);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 0, 0.2);
+            border-radius: 15px;
+            color: var(--white);
+            font-size: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--yellow);
+            background: rgba(255, 255, 0, 0.05);
+        }
+
+        /* Batch Selector */
+        .batch-selector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .batch-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 0, 0.3);
+            background: transparent;
+            color: var(--yellow);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .batch-btn:hover:not(:disabled) {
+            border-color: var(--yellow);
+            background: rgba(255, 255, 0, 0.1);
+            transform: scale(1.1);
+        }
+
+        .batch-count {
+            font-size: 3rem;
+            font-weight: 700;
+            min-width: 100px;
+            text-align: center;
+            color: var(--yellow);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            background: var(--medium-gray);
+            border: 2px solid rgba(255, 255, 0, 0.3);
+            border-radius: 30px;
+            padding: 50px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            transform: scale(0.9);
+            opacity: 0;
+            animation: modalAppear 0.3s ease forwards;
+        }
+
+        @keyframes modalAppear {
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .payment-qr {
+            width: 200px;
+            height: 200px;
+            margin: 30px auto;
+            background: var(--white);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        #qrcode {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #qrcode canvas,
+        #qrcode img {
+            display: block !important;
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 0;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 0, 0.1);
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .tier-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            nav {
+                display: none;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Three.js Canvas -->
+    <canvas id="three-canvas"></canvas>
+    
+    <!-- Lightning Rain Background -->
+    <div class="lightning-rain" id="lightningRain"></div>
+    
+    <div class="content-wrapper">
+        <header id="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo-section">
+                        <img src="logo.jpg" alt="LIGHTCAT Logo" class="logo">
+                        <div>
+                            <h1 class="site-title">LIGHTCAT</h1>
+                            <p class="tagline">First Cat Meme Token on RGB Protocol</p>
+                        </div>
+                    </div>
+                    <nav>
+                        <a href="#stats">Stats</a>
+                        <a href="#game">Game</a>
+                        <a href="#purchase">Purchase</a>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <section id="stats" class="stats-section">
+            <div class="container">
+                <h2 class="section-title">LIVE MINT STATUS</h2>
+                <div class="mint-status-text" id="progressText">4.38% SOLD</div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar" style="width: 4.38%"></div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="soldBatches">1,250</div>
+                        <div class="stat-label">Batches Sold</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="remainingBatches">27,250</div>
+                        <div class="stat-label">Remaining</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalTokens">875,000</div>
+                        <div class="stat-label">Tokens Minted</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="uniqueBuyers">342</div>
+                        <div class="stat-label">Unique Wallets</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="game" class="game-section">
+            <div class="container">
+                <h2 class="section-title">UNLOCK PURCHASE TIERS</h2>
+                
+                <div class="tier-grid">
+                    <div class="tier-card" id="tier3">
+                        <div class="tier-number">1</div>
+                        <div class="tier-name">Gold</div>
+                        <div class="tier-requirement">Score: 101+</div>
+                        <div class="tier-reward">Max: 10 Batches</div>
+                    </div>
+                    <div class="tier-card" id="tier2">
+                        <div class="tier-number">2</div>
+                        <div class="tier-name">Silver</div>
+                        <div class="tier-requirement">Score: 51-100</div>
+                        <div class="tier-reward">Max: 8 Batches</div>
+                    </div>
+                    <div class="tier-card" id="tier1">
+                        <div class="tier-number">3</div>
+                        <div class="tier-name">Bronze</div>
+                        <div class="tier-requirement">Score: 0-50</div>
+                        <div class="tier-reward">Max: 5 Batches</div>
+                    </div>
+                </div>
+
+                <div class="game-container">
+                    <canvas id="gameCanvas" width="800" height="500"></canvas>
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button class="btn" id="startGameBtn">START GAME</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="purchase" class="purchase-section">
+            <div class="container">
+                <h2 class="section-title">PURCHASE TOKENS</h2>
+                
+                <form class="purchase-form" id="purchaseForm">
+                    <div class="form-group">
+                        <label class="form-label" style="display: block; margin-bottom: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Bitcoin Wallet Address</label>
+                        <input 
+                            type="text" 
+                            class="form-input" 
+                            id="walletAddress" 
+                            placeholder="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+                            required
+                        >
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 40px;">
+                        <label class="form-label" style="display: block; margin-bottom: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Number of Batches</label>
+                        <div class="batch-selector">
+                            <button type="button" class="batch-btn" id="decreaseBatch">−</button>
+                            <div class="batch-count" id="batchCount">1</div>
+                            <button type="button" class="batch-btn" id="increaseBatch">+</button>
+                        </div>
+                        <p style="text-align: center; color: rgba(255, 255, 255, 0.6); margin-top: 20px;">
+                            Maximum allowed: <span id="maxBatches" style="color: var(--yellow);">5</span> batches
+                        </p>
+                    </div>
+                    
+                    <div style="background: rgba(255, 255, 0, 0.05); border: 1px solid rgba(255, 255, 0, 0.2); border-radius: 15px; padding: 30px; margin: 40px 0; text-align: center;">
+                        <div style="font-size: 2.5rem; font-weight: 700; color: var(--yellow); font-family: 'JetBrains Mono', monospace;" id="totalBTC">0.00002000 BTC</div>
+                        <div style="margin-top: 10px; color: rgba(255, 255, 255, 0.7);">
+                            <span id="totalSats">2,000</span> satoshis • 
+                            <span id="tokenAmount">700</span> LIGHTCAT tokens
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem;">
+                        CREATE INVOICE
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <footer>
+            <div class="container">
+                <p>© 2025 LIGHTCAT Token. Built on RGB Protocol.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <button style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--yellow); font-size: 2rem; cursor: pointer;" id="closeModal">&times;</button>
+            <h3 style="text-align: center; margin-bottom: 30px; color: var(--yellow); font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px;">Bitcoin Payment</h3>
+            
+            <div class="payment-info">
+                <div class="payment-qr" id="qrCodeContainer">
+                    <div id="qrcode"></div>
+                </div>
+                
+                <div style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 0, 0.2); border-radius: 15px; padding: 25px; margin: 30px 0;">
+                    <p style="margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">Send exactly:</p>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; color: var(--yellow); margin: 15px 0; padding: 15px; background: rgba(255, 255, 0, 0.05); border-radius: 10px; cursor: pointer;" id="paymentAmount" onclick="copyAmount()">
+                        0.00002000 BTC
+                    </div>
+                    
+                    <p style="margin-bottom: 15px; margin-top: 25px; text-transform: uppercase; letter-spacing: 1px;">To address:</p>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; word-break: break-all; margin: 15px 0; padding: 15px; background: rgba(255, 255, 0, 0.05); border-radius: 10px; cursor: pointer;" id="paymentAddress" onclick="copyAddress()">
+                        bc1qpaymentaddress...
+                    </div>
+                </div>
+                
+                <div style="border: 2px solid var(--yellow); padding: 20px; text-align: center; text-transform: uppercase; letter-spacing: 1px; margin-top: 30px;">
+                    Send EXACTLY the amount shown. Incorrect amounts cannot be processed.
+                </div>
+                
+                <p style="text-align: center; margin-top: 30px; color: rgba(255, 255, 255, 0.6);">
+                    Waiting for payment confirmation...
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="litecat-game.js"></script>
+    <script src="scripts/app-pro.js"></script>
+    <script>
+        // Initialize GSAP
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Three.js Background
+        let scene, camera, renderer, particles;
+
+        function initThree() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('three-canvas'),
+                alpha: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.position.z = 5;
+
+            // Create particles
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const sparkle = 500;
+
+            for (let i = 0; i < sparkle; i++) {
+                const x = Math.random() * 2000 - 1000;
+                const y = Math.random() * 2000 - 1000;
+                const z = Math.random() * 2000 - 1000;
+                vertices.push(x, y, z);
+            }
+
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+            const material = new THREE.PointsMaterial({ 
+                color: 0xFFFF00, 
+                size: 2,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            particles.rotation.x += 0.0005;
+            particles.rotation.y += 0.0005;
+            renderer.render(scene, camera);
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initThree();
+            initAnimations();
+            createLightningRain();
+        });
+
+        // Window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // GSAP Animations
+        function initAnimations() {
+            // Fade in elements
+            gsap.to('.mint-status-text', {
+                opacity: 1,
+                y: 0,
+                duration: 1,
+                delay: 0.5
+            });
+
+            // Stat cards
+            gsap.to('.stat-card', {
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
+                stagger: 0.1,
+                delay: 0.8
+            });
+
+            // Tier cards
+            ScrollTrigger.create({
+                trigger: '.tier-grid',
+                start: 'top 80%',
+                onEnter: () => {
+                    gsap.to('.tier-card', {
+                        opacity: 1,
+                        y: 0,
+                        scale: 1,
+                        duration: 0.8,
+                        stagger: 0.15
+                    });
+                }
+            });
+
+            // Purchase form
+            ScrollTrigger.create({
+                trigger: '.purchase-form',
+                start: 'top 80%',
+                onEnter: () => {
+                    gsap.to('.purchase-form', {
+                        opacity: 1,
+                        y: 0,
+                        duration: 1
+                    });
+                }
+            });
+        }
+
+        // Create dynamic lightning rain
+        function createLightningRain() {
+            const container = document.getElementById('lightningRain');
+            
+            for (let i = 0; i < 15; i++) {
+                const bolt = document.createElement('div');
+                bolt.style.position = 'absolute';
+                bolt.style.left = Math.random() * 100 + '%';
+                bolt.style.top = '-100px';
+                bolt.style.width = '40px';
+                bolt.style.height = '60px';
+                bolt.style.backgroundImage = 'url(LIGHTING_BOT.png)';
+                bolt.style.backgroundSize = 'contain';
+                bolt.style.backgroundRepeat = 'no-repeat';
+                bolt.style.opacity = Math.random() * 0.3 + 0.1;
+                bolt.style.animation = `fall ${Math.random() * 3 + 4}s linear infinite`;
+                bolt.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(bolt);
+            }
+        }
+
+        // Add CSS animation for lightning
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fall {
+                to {
+                    transform: translateY(calc(100vh + 100px));
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // QR Code generation
+        window.generateQRCode = function(address, amount) {
+            console.log('Generating QR code for:', address, 'Amount:', amount);
+            const qrContainer = document.getElementById('qrcode');
+            
+            if (!qrContainer) {
+                console.error('QR code container not found!');
+                return;
+            }
+            
+            qrContainer.innerHTML = ''; // Clear previous QR
+            
+            const bitcoinUri = `bitcoin:${address}?amount=${amount}&label=LIGHTCAT%20Token%20Purchase`;
+            console.log('Bitcoin URI:', bitcoinUri);
+            
+            try {
+                new QRCode(qrContainer, {
+                    text: bitcoinUri,
+                    width: 180,
+                    height: 180,
+                    colorDark: '#000000',
+                    colorLight: '#FFFFFF',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                console.log('QR code generated successfully');
+            } catch (error) {
+                console.error('Error generating QR code:', error);
+                qrContainer.innerHTML = '<p style="color: red; padding: 20px;">Error generating QR code</p>';
+            }
+        }
+
+        // Payment modal functions
+        window.showPaymentModal = function(invoice) {
+            console.log('Opening payment modal with invoice:', invoice);
+            const modal = document.getElementById('paymentModal');
+            
+            if (!modal) {
+                console.error('Payment modal not found!');
+                return;
+            }
+            
+            // Update modal content
+            const amountElement = document.getElementById('paymentAmount');
+            const addressElement = document.getElementById('paymentAddress');
+            
+            if (amountElement) {
+                amountElement.textContent = invoice.amountBTC.toFixed(8) + ' BTC';
+            }
+            if (addressElement) {
+                addressElement.textContent = invoice.paymentAddress;
+            }
+            
+            // Generate QR code
+            window.generateQRCode(invoice.paymentAddress, invoice.amountBTC);
+            
+            // Show modal
+            modal.style.display = 'flex';
+        };
+
+        // Copy functions
+        window.copyAddress = function() {
+            const address = document.getElementById('paymentAddress').textContent;
+            navigator.clipboard.writeText(address).then(() => {
+                showNotification('Address copied to clipboard');
+            });
+        };
+
+        window.copyAmount = function() {
+            const amount = document.getElementById('paymentAmount').textContent.replace(' BTC', '');
+            navigator.clipboard.writeText(amount).then(() => {
+                showNotification('Amount copied to clipboard');
+            });
+        };
+
+        // Notification system
+        function showNotification(message) {
+            const notif = document.createElement('div');
+            notif.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--yellow);
+                color: var(--black);
+                padding: 15px 30px;
+                border-radius: 50px;
+                font-weight: 600;
+                z-index: 3000;
+                animation: slideIn 0.3s ease;
+            `;
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
+
+        // Add notification animations
+        const notifStyle = document.createElement('style');
+        notifStyle.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(notifStyle);
+    </script>
+</body>
+</html>

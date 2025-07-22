@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug ProGame</title>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background: #000; }
+        canvas { display: block; }
+        #debug {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: yellow;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            font-family: monospace;
+            max-width: 50%;
+            max-height: 80%;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="debug">Loading...</div>
+    <canvas id="game-canvas"></canvas>
+    
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    
+    <script type="module">
+        const debug = document.getElementById('debug');
+        const log = (msg) => {
+            debug.innerHTML += '<br>' + msg;
+            console.log(msg);
+        };
+        
+        try {
+            log('Starting debug...');
+            
+            // Import Three.js first
+            const THREE = await import('three');
+            log('Three.js loaded: ' + (THREE ? 'YES' : 'NO'));
+            
+            // Import ProGame
+            const { ProGame } = await import('./js/game/ProGame.js');
+            log('ProGame loaded: ' + (ProGame ? 'YES' : 'NO'));
+            
+            // Create game
+            const canvas = document.getElementById('game-canvas');
+            log('Canvas found: ' + (canvas ? 'YES' : 'NO'));
+            
+            const game = new ProGame(canvas);
+            log('Game created successfully!');
+            
+            // Expose to window
+            window.game = game;
+            window.THREE = THREE;
+            
+            // Start on click
+            debug.innerHTML += '<br><br>Click here to start game!';
+            debug.style.cursor = 'pointer';
+            debug.addEventListener('click', () => {
+                game.start();
+                log('Game started!');
+                debug.style.display = 'none';
+            });
+            
+        } catch (error) {
+            log('ERROR: ' + error.message);
+            log('Stack: ' + error.stack);
+        }
+    </script>
+</body>
+</html>
