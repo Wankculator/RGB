@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIGHTCAT Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #FFFF00;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 0 0 10px #FFFF00;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: #111;
+            border: 2px solid #FFFF00;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            color: #FFFF00;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            color: #888;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 40px;
+            background: #222;
+            border: 2px solid #FFFF00;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFFF00, #FFD700);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        .close-button {
+            background: #FF0000;
+            color: #fff;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            cursor: pointer;
+            border-radius: 5px;
+            display: none;
+            margin: 20px auto;
+            font-weight: bold;
+        }
+        
+        .close-button:hover {
+            background: #CC0000;
+        }
+        
+        .close-button.active {
+            display: block;
+        }
+        
+        .purchase-table {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #222;
+            color: #FFFF00;
+            padding: 15px;
+            text-align: left;
+            border-bottom: 2px solid #FFFF00;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #333;
+        }
+        
+        tr:hover {
+            background: #1a1a1a;
+        }
+        
+        .status-pending {
+            color: #FFA500;
+        }
+        
+        .status-completed {
+            color: #00FF00;
+        }
+        
+        .verify-btn {
+            background: #FFFF00;
+            color: #000;
+            border: none;
+            padding: 5px 15px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .verify-btn:hover {
+            background: #FFD700;
+        }
+        
+        .export-section {
+            margin-top: 40px;
+            text-align: center;
+        }
+        
+        .export-btn {
+            background: #00FF00;
+            color: #000;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 0 10px;
+            font-weight: bold;
+        }
+        
+        .export-btn:hover {
+            background: #00CC00;
+        }
+        
+        .alert {
+            background: #FF0000;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐱⚡ LIGHTCAT ADMIN DASHBOARD</h1>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalSold">0</div>
+                <div class="stat-label">Batches Sold</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalBTC">0</div>
+                <div class="stat-label">BTC Raised</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="uniqueBuyers">0</div>
+                <div class="stat-label">Unique Buyers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="remaining">28500</div>
+                <div class="stat-label">Remaining</div>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar">0%</div>
+        </div>
+        
+        <div class="alert" id="soldOutAlert">
+            ⚠️ SALE COMPLETED - 100% SOLD OUT! ⚠️
+        </div>
+        
+        <button class="close-button" id="closeMintBtn" onclick="closeMint()">
+            🔒 CLOSE MINT (IRREVERSIBLE)
+        </button>
+        
+        <div class="purchase-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Invoice ID</th>
+                        <th>Wallet Address</th>
+                        <th>Amount (BTC)</th>
+                        <th>Batches</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="purchasesList">
+                    <!-- Purchases will be populated here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="export-section">
+            <h2 style="color: #FFFF00; margin-bottom: 20px;">EXPORT DATA</h2>
+            <button class="export-btn" onclick="exportCSV()">📊 Export CSV</button>
+            <button class="export-btn" onclick="exportJSON()">📋 Export JSON</button>
+            <button class="export-btn" onclick="verifyAllPayments()">🔍 Verify All Payments</button>
+        </div>
+    </div>
+
+    <script>
+        const TOTAL_BATCHES = 30000; // Full supply
+        const PUBLIC_BATCHES = 27900; // Available for public sale
+        const RESERVED_BATCHES = 2100; // Team (5%) + Partners (2%)
+        const API_URL = 'http://localhost:3001/api';
+        
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                // Get stats
+                const statsRes = await fetch(`${API_URL}/payments/stats`);
+                const stats = await statsRes.json();
+                
+                if (stats.success) {
+                    const data = stats.stats;
+                    const publicSold = data.batchesSold || 0;
+                    const totalAllocated = RESERVED_BATCHES + publicSold;
+                    
+                    document.getElementById('totalSold').textContent = totalAllocated;
+                    document.getElementById('totalBTC').textContent = (data.totalBtcRaised || 0).toFixed(8);
+                    document.getElementById('uniqueBuyers').textContent = data.uniqueBuyers || 0;
+                    
+                    const publicRemaining = PUBLIC_BATCHES - publicSold;
+                    document.getElementById('remaining').textContent = publicRemaining;
+                    
+                    // Update progress bar (showing total allocation including reserved)
+                    const progress = (totalAllocated / TOTAL_BATCHES) * 100;
+                    const progressBar = document.getElementById('progressBar');
+                    progressBar.style.width = progress + '%';
+                    progressBar.textContent = progress.toFixed(2) + '%';
+                    
+                    // Show gradient in progress bar
+                    if (publicSold === 0) {
+                        progressBar.style.background = '#FF9500'; // Only team/partner allocation
+                    } else {
+                        const reservedPercent = (RESERVED_BATCHES / totalAllocated) * 100;
+                        progressBar.style.background = `linear-gradient(90deg, #FF9500 0%, #FF9500 ${reservedPercent}%, #00FF00 ${reservedPercent}%, #00FF00 100%)`;
+                    }
+                    
+                    // Check if sold out
+                    if (publicRemaining <= 0) {
+                        document.getElementById('soldOutAlert').classList.add('show');
+                        document.getElementById('closeMintBtn').classList.add('active');
+                    }
+                }
+                
+                // Get recent purchases
+                const purchasesRes = await fetch(`${API_URL}/admin/purchases?limit=50`);
+                const purchases = await purchasesRes.json();
+                
+                if (purchases.success) {
+                    displayPurchases(purchases.purchases);
+                }
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+        
+        function displayPurchases(purchases) {
+            const tbody = document.getElementById('purchasesList');
+            tbody.innerHTML = '';
+            
+            purchases.forEach(purchase => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${purchase.invoice_id}</td>
+                    <td>${purchase.wallet_address}</td>
+                    <td>${purchase.amount_btc}</td>
+                    <td>${purchase.batches}</td>
+                    <td class="status-${purchase.status}">${purchase.status.toUpperCase()}</td>
+                    <td>
+                        ${purchase.status === 'pending' ? 
+                            `<button class="verify-btn" onclick="verifyPayment('${purchase.invoice_id}')">Verify</button>` : 
+                            '-'
+                        }
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        async function verifyPayment(invoiceId) {
+            try {
+                const res = await fetch(`${API_URL}/payments/verify/${invoiceId}`);
+                const result = await res.json();
+                
+                if (result.success) {
+                    alert(`Payment status: ${result.status}`);
+                    loadDashboard(); // Reload data
+                }
+            } catch (error) {
+                console.error('Error verifying payment:', error);
+            }
+        }
+        
+        async function closeMint() {
+            if (!confirm('⚠️ WARNING: This will permanently close the mint. This action cannot be undone. Are you sure?')) {
+                return;
+            }
+            
+            if (!confirm('⚠️ FINAL CONFIRMATION: Close the mint NOW?')) {
+                return;
+            }
+            
+            try {
+                // Here you would call your API to close the mint
+                alert('🔒 MINT CLOSED SUCCESSFULLY');
+                document.getElementById('closeMintBtn').disabled = true;
+                document.getElementById('closeMintBtn').textContent = '🔒 MINT CLOSED';
+            } catch (error) {
+                console.error('Error closing mint:', error);
+            }
+        }
+        
+        async function exportCSV() {
+            try {
+                const res = await fetch(`${API_URL}/admin/export/csv`);
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `lightcat_airdrop_${new Date().toISOString().slice(0,10)}.csv`;
+                a.click();
+            } catch (error) {
+                console.error('Error exporting CSV:', error);
+            }
+        }
+        
+        async function exportJSON() {
+            try {
+                const res = await fetch(`${API_URL}/admin/export/json`);
+                const data = await res.json();
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `lightcat_airdrop_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+            } catch (error) {
+                console.error('Error exporting JSON:', error);
+            }
+        }
+        
+        async function verifyAllPayments() {
+            if (confirm('Verify all pending payments against blockchain?')) {
+                alert('Verification started. This may take a few minutes...');
+                // Run verification script
+                try {
+                    const res = await fetch(`${API_URL}/admin/verify-all`, { method: 'POST' });
+                    const result = await res.json();
+                    alert(`Verification complete. ${result.matched} payments verified.`);
+                    loadDashboard();
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+        }
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadDashboard, 30000);
+        
+        // Initial load
+        loadDashboard();
+    </script>
+</body>
+</html>

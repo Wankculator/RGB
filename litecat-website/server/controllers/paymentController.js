@@ -15,6 +15,19 @@ class PaymentController {
     try {
       const { walletAddress, batchCount, gameTier = 1 } = req.body;
       
+      // Check if mint is closed
+      const { data: salesData } = await supabase
+        .from('sales_stats')
+        .select('mint_closed, total_sold')
+        .single();
+      
+      if (salesData?.mint_closed) {
+        return res.status(400).json({
+          error: 'MINT CLOSED - No new purchases allowed',
+          mintClosed: true
+        });
+      }
+      
       // Validate game tier and batch count
       const maxBatches = config.game.tiers[gameTier]?.maxBatches || 5;
       if (batchCount > maxBatches) {
@@ -58,8 +71,13 @@ class PaymentController {
         });
       }
 
-      // Calculate payment amount
-      const totalSatoshis = batchCount * config.token.satoshisPerBatch;
+      // Calculate payment amount with unique identifier
+      const baseSatoshis = batchCount * config.token.satoshisPerBatch;
+      
+      // Add tiny unique amount (1-9999 satoshis) based on timestamp
+      const uniqueId = parseInt(Date.now().toString().slice(-4));
+      const totalSatoshis = baseSatoshis + uniqueId;
+      
       const totalTokens = batchCount * config.token.tokensPerBatch;
 
       // Generate unique invoice ID
@@ -97,21 +115,25 @@ class PaymentController {
       const bitcoinUri = `bitcoin:${paymentAddress}?amount=${totalSatoshis / 100000000}&label=Litecat%20Token%20Purchase`;
       qrCodeDataURL = await QRCode.toDataURL(bitcoinUri);
 
-      // Store in database
+      // Store in database using new schema
       const { data: purchase, error } = await supabase
         .from('purchases')
         .insert({
-          id: invoiceId,
+          invoice_id: invoiceId,
           wallet_address: walletAddress,
-          batch_count: batchCount,
-          total_tokens: totalTokens,
-          total_satoshis: totalSatoshis,
-          game_tier: gameTier,
-          status: 'pending',
           payment_address: paymentAddress,
-          coinpayments_id: coinpaymentsId,
+          amount_btc: totalSatoshis / 100000000,
+          tokens: totalTokens,
+          batches: batchCount,
+          tier: `tier${gameTier}`,
+          status: 'pending',
+          coinpayments_txn_id: coinpaymentsId,
           expires_at: new Date(Date.now() + 3600000), // 1 hour
-          created_at: new Date()
+          metadata: {
+            gameTier: gameTier,
+            userAgent: req.headers['user-agent'],
+            ip: req.ip
+          }
         })
         .select()
         .single();
@@ -123,7 +145,7 @@ class PaymentController {
 
       // Send response
       res.status(201).json({
-        invoiceId,
+        invoiceId: purchase.invoice_id,
         paymentAddress: paymentAddress,
         amount: totalSatoshis,
         amountBTC: totalSatoshis / 100000000,
@@ -299,31 +321,38 @@ class PaymentController {
    */
   async getSalesStats(req, res) {
     try {
-      const { data: stats, error } = await supabase
-        .from('purchases')
-        .select('batch_count, total_tokens, status')
-        .in('status', ['completed', 'pending']);
+      // Get sales stats from dedicated table
+      const { data: salesStats, error: statsError } = await supabase
+        .from('sales_stats')
+        .select('*')
+        .single();
 
-      if (error) {
-        logger.error('Error fetching sales stats:', error);
+      if (statsError && statsError.code !== 'PGRST116') {
+        logger.error('Error fetching sales stats:', statsError);
         return res.status(500).json({ error: 'Internal server error' });
       }
 
-      const completedSales = stats?.filter(s => s.status === 'completed') || [];
-      const pendingSales = stats?.filter(s => s.status === 'pending') || [];
+      // If no stats exist, return defaults
+      const stats = salesStats || {
+        total_batches_sold: 0,
+        total_tokens_sold: 0,
+        total_btc_raised: 0,
+        unique_buyers: 0
+      };
 
-      const totalSold = completedSales.reduce((sum, s) => sum + s.batch_count, 0);
-      const totalPending = pendingSales.reduce((sum, s) => sum + s.batch_count, 0);
-      const totalTokensSold = completedSales.reduce((sum, s) => sum + s.total_tokens, 0);
+      const totalBatches = config.tokenSale.totalBatches || 28500;
+      const batchesSold = stats.total_batches_sold || 0;
+      const percentageSold = (batchesSold / totalBatches) * 100;
 
       res.json({
-        totalBatches: config.token.availableBatches,
-        batchesSold: totalSold,
-        batchesPending: totalPending,
-        batchesRemaining: config.token.availableBatches - totalSold - totalPending,
-        tokensSold: totalTokensSold,
-        salesProgress: (totalSold / config.token.availableBatches) * 100,
-        isSoldOut: totalSold >= config.token.availableBatches
+        totalBatches: totalBatches,
+        batchesSold: batchesSold,
+        batchesRemaining: totalBatches - batchesSold,
+        tokensSold: stats.total_tokens_sold || 0,
+        salesProgress: percentageSold.toFixed(2),
+        totalBtcRaised: stats.total_btc_raised || 0,
+        uniqueBuyers: stats.unique_buyers || 0,
+        isSoldOut: batchesSold >= totalBatches
       });
 
     } catch (error) {

@@ -1052,6 +1052,7 @@
                         <a href="#stats">Stats</a>
                         <a href="#game">Game</a>
                         <a href="#purchase">Purchase</a>
+                        <a href="tokenomics.html">Tokenomics</a>
                     </nav>
                 </div>
             </div>
@@ -1060,25 +1061,25 @@
         <section id="stats" class="stats-section">
             <div class="container">
                 <h2 class="section-title">LIVE MINT STATUS</h2>
-                <div class="mint-status-text" id="progressText">4.38% SOLD</div>
+                <div class="mint-status-text" id="progressText">7.00% SOLD</div>
                 <div class="progress-container">
-                    <div class="progress-bar" id="progressBar" style="width: 4.38%"></div>
+                    <div class="progress-bar" id="progressBar" style="width: 7%; background: var(--yellow);"></div>
                 </div>
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-number" id="soldBatches">1,250</div>
+                        <div class="stat-number" id="soldBatches">2,100</div>
                         <div class="stat-label">Batches Sold</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number" id="remainingBatches">27,250</div>
+                        <div class="stat-number" id="remainingBatches">27,900</div>
                         <div class="stat-label">Remaining</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number" id="totalTokens">875,000</div>
-                        <div class="stat-label">Tokens Minted</div>
+                        <div class="stat-number" id="totalTokens">1,470,000</div>
+                        <div class="stat-label">Tokens Sold</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number" id="uniqueBuyers">342</div>
+                        <div class="stat-number" id="uniqueBuyers">0</div>
                         <div class="stat-label">Unique Wallets</div>
                     </div>
                 </div>
@@ -1687,6 +1688,7 @@
             // State
             let currentBatches = 1;
             let maxBatches = 5; // Default, will be updated based on game tier
+            let isMintClosed = false; // Track if mint is closed
             
             // Check for unlocked tier from game
             const urlParams = new URLSearchParams(window.location.search);
@@ -1751,6 +1753,12 @@
             purchaseForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
+                // Check if mint is closed
+                if (isMintClosed) {
+                    showNotification('MINT IS CLOSED - No new purchases allowed', 'error');
+                    return;
+                }
+                
                 const walletAddress = document.getElementById('walletAddress').value.trim();
                 
                 // Basic validation
@@ -1771,28 +1779,26 @@
                 submitBtn.textContent = 'CREATING INVOICE...';
                 
                 try {
-                    // Create invoice data
-                    const invoiceData = {
-                        walletAddress: walletAddress,
-                        batches: currentBatches,
-                        amount: currentBatches * PRICE_PER_BATCH_BTC,
-                        tokens: currentBatches * TOKENS_PER_BATCH
-                    };
+                    // Create invoice via API
+                    const response = await fetch('/api/payments/create-invoice', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            walletAddress: walletAddress,
+                            batches: currentBatches,
+                            tier: unlockedTier || 'none'
+                        })
+                    });
                     
-                    // For demo purposes, we'll use a static payment address
-                    // In production, this would call the backend API
-                    const paymentAddress = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Failed to create invoice');
+                    }
                     
-                    const invoice = {
-                        invoiceId: 'INV-' + Date.now(),
-                        paymentAddress: paymentAddress,
-                        amountBTC: invoiceData.amount,
-                        amountSats: currentBatches * PRICE_PER_BATCH_SATS,
-                        tokens: invoiceData.tokens,
-                        walletAddress: invoiceData.walletAddress,
-                        status: 'pending',
-                        createdAt: new Date().toISOString()
-                    };
+                    const result = await response.json();
+                    const invoice = result.invoice;
                     
                     // Show payment modal
                     showPaymentModal(invoice);
@@ -1800,7 +1806,7 @@
                     // Store invoice for reference
                     localStorage.setItem('currentInvoice', JSON.stringify(invoice));
                     
-                    // Start payment verification polling (mock)
+                    // Start payment verification polling
                     startPaymentVerification(invoice.invoiceId);
                     
                 } catch (error) {
@@ -1813,23 +1819,61 @@
                 }
             });
             
-            // Payment verification (mock)
+            // Payment verification
             function startPaymentVerification(invoiceId) {
                 let checkCount = 0;
                 const maxChecks = 120; // 10 minutes at 5 second intervals
                 
-                const verificationInterval = setInterval(() => {
+                const verificationInterval = setInterval(async () => {
                     checkCount++;
                     
-                    // In production, this would check with the backend
-                    // For demo, we'll just update the status text
-                    const statusText = document.querySelector('#paymentModal p:last-child');
-                    if (statusText) {
-                        statusText.textContent = `Waiting for payment confirmation... (${checkCount * 5}s)`;
+                    try {
+                        const response = await fetch(`/api/payments/verify/${invoiceId}`, {
+                            method: 'POST'
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Verification failed');
+                        }
+                        
+                        const result = await response.json();
+                        const statusText = document.querySelector('#paymentModal p:last-child');
+                        
+                        if (result.status === 'confirmed' || result.status === 'complete') {
+                            clearInterval(verificationInterval);
+                            if (statusText) {
+                                statusText.innerHTML = '<span style="color: #4CAF50;">✓ Payment confirmed! Tokens reserved.</span>';
+                            }
+                            showNotification('Payment confirmed! Your tokens have been reserved.');
+                            
+                            // Update stats
+                            updateMintStats();
+                            
+                            // Close modal after 3 seconds
+                            setTimeout(() => {
+                                document.getElementById('paymentModal').style.display = 'none';
+                            }, 3000);
+                            
+                        } else if (result.status === 'expired') {
+                            clearInterval(verificationInterval);
+                            if (statusText) {
+                                statusText.textContent = 'Invoice expired. Please create a new one.';
+                                statusText.style.color = '#ff5252';
+                            }
+                        } else {
+                            // Still pending
+                            if (statusText) {
+                                statusText.textContent = `Waiting for payment confirmation... (${checkCount * 5}s)`;
+                            }
+                        }
+                        
+                    } catch (error) {
+                        console.error('Verification error:', error);
                     }
                     
                     if (checkCount >= maxChecks) {
                         clearInterval(verificationInterval);
+                        const statusText = document.querySelector('#paymentModal p:last-child');
                         if (statusText) {
                             statusText.textContent = 'Payment verification timeout. Please contact support if you have sent payment.';
                             statusText.style.color = '#ff5252';
@@ -1864,6 +1908,90 @@
             
             // Initialize display
             updateBatchDisplay();
+            
+            // Update mint stats from API
+            async function updateMintStats() {
+                try {
+                    const response = await fetch('/api/payments/stats');
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch stats');
+                    }
+                    
+                    const stats = await response.json();
+                    
+                    // Constants - showing full 30k with team/partner allocation
+                    const TOTAL_SUPPLY_BATCHES = 30000; // Full 21M tokens / 700
+                    const TEAM_BATCHES = 1500; // 5% of 30k
+                    const PARTNER_BATCHES = 600; // 2% of 30k
+                    const PRE_ALLOCATED = TEAM_BATCHES + PARTNER_BATCHES; // 2100 batches (7%)
+                    const PUBLIC_BATCHES = 27900;
+                    
+                    // Get actual public sales
+                    const publicSoldBatches = stats.batchesSold || 0;
+                    const totalAllocated = PRE_ALLOCATED + publicSoldBatches;
+                    const publicRemaining = PUBLIC_BATCHES - publicSoldBatches;
+                    const totalTokensAllocated = totalAllocated * 700;
+                    const uniqueBuyers = stats.uniqueBuyers || 0;
+                    
+                    // Calculate percentage of TOTAL supply (creates FOMO)
+                    const percentAllocated = ((totalAllocated / TOTAL_SUPPLY_BATCHES) * 100).toFixed(2);
+                    
+                    // Show warning if almost sold out
+                    if (publicRemaining > 0 && publicRemaining <= 1000) {
+                        // Create warning banner if doesn't exist
+                        let warningBanner = document.getElementById('soldOutWarning');
+                        if (!warningBanner) {
+                            warningBanner = document.createElement('div');
+                            warningBanner.id = 'soldOutWarning';
+                            warningBanner.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #FF5252; color: white; padding: 15px; text-align: center; z-index: 9999; font-weight: bold; font-size: 1.1rem;';
+                            warningBanner.textContent = `⚠️ ONLY ${publicRemaining} BATCHES REMAINING - MINT CLOSING SOON ⚠️`;
+                            document.body.prepend(warningBanner);
+                        } else {
+                            warningBanner.textContent = `⚠️ ONLY ${publicRemaining} BATCHES REMAINING - MINT CLOSING SOON ⚠️`;
+                        }
+                    }
+                    
+                    // Check if sold out
+                    if (publicRemaining <= 0) {
+                        isMintClosed = true;
+                        document.getElementById('progressText').textContent = '100% SOLD OUT';
+                        document.getElementById('progressBar').style.width = '100%';
+                        document.getElementById('progressBar').style.background = '#FF5252'; // Red for sold out
+                        
+                        // Disable purchase form
+                        const purchaseForm = document.getElementById('purchaseForm');
+                        if (purchaseForm) {
+                            purchaseForm.style.opacity = '0.5';
+                            purchaseForm.style.pointerEvents = 'none';
+                            const submitBtn = purchaseForm.querySelector('button[type="submit"]');
+                            if (submitBtn) {
+                                submitBtn.textContent = 'SOLD OUT';
+                                submitBtn.disabled = true;
+                            }
+                        }
+                    } else {
+                        // Update DOM with clean numbers (including pre-allocated)
+                        document.getElementById('progressText').textContent = percentAllocated + '% SOLD';
+                        document.getElementById('progressBar').style.width = percentAllocated + '%';
+                        document.getElementById('progressBar').style.background = 'var(--yellow)';
+                    }
+                    
+                    document.getElementById('soldBatches').textContent = totalAllocated.toLocaleString();
+                    document.getElementById('remainingBatches').textContent = publicRemaining.toLocaleString();
+                    document.getElementById('totalTokens').textContent = totalTokensAllocated.toLocaleString();
+                    document.getElementById('uniqueBuyers').textContent = uniqueBuyers.toLocaleString();
+                    
+                } catch (error) {
+                    console.error('Error fetching stats:', error);
+                    // Keep current values on error
+                }
+            }
+            
+            // Call on page load
+            updateMintStats();
+            
+            // Update stats periodically to keep data live
+            setInterval(updateMintStats, 5000); // Update every 5 seconds for real-time data
         });
     </script>
 </body>
