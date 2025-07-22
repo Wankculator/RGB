@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>LIGHTCAT Runner - Collect Lightning</title>
+    <title>Light Cat - Collect Lightning</title>
     <link rel="stylesheet" href="styles/main.css">
     <style>
         #game-container {
@@ -86,82 +86,119 @@
         }
 
         .lightning-icon {
-            width: 30px;
-            height: 30px;
-            animation: pulse 1s infinite;
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+        }
+        
+        .tier-notification {
+            position: absolute;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--primary-yellow);
+            border-radius: var(--border-radius);
+            padding: 0.25rem 1rem;
+            color: var(--primary-yellow);
+            font-weight: var(--font-weight-semibold);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+            pointer-events: none;
+            z-index: 150;
+        }
+        
+        .tier-notification.show {
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            .tier-notification {
+                font-size: 0.75rem;
+                padding: 0.2rem 0.75rem;
+                top: 70px;
+            }
         }
 
         #game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--primary-black);
+            display: none;
+            z-index: 300;
+            overflow: hidden;
+        }
+        
+        .game-over-content {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.98);
-            border: 3px solid var(--primary-yellow);
-            border-radius: var(--border-radius-large);
-            padding: var(--spacing-xl);
             text-align: center;
-            display: none;
-            z-index: 200;
-            min-width: 400px;
-            box-shadow: var(--glow-intense);
+            width: 90%;
+            max-width: 350px;
+            padding: var(--spacing-md);
         }
         
         @media (max-width: 768px) {
-            #game-over {
-                min-width: 90%;
-                max-width: 350px;
-                padding: var(--spacing-lg);
+            .game-over-content h1 {
+                font-size: 2.5rem;
+            }
+            .game-over-content .final-score {
+                font-size: 2rem;
             }
         }
 
         #game-over h2 {
             color: var(--primary-yellow);
-            font-size: 3rem;
-            margin-bottom: var(--spacing-md);
-            font-weight: var(--font-weight-black);
+            font-size: 1.5rem;
+            margin-bottom: var(--spacing-sm);
+            font-weight: var(--font-weight-bold);
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
         
         @media (max-width: 768px) {
             #game-over h2 {
-                font-size: 2rem;
+                font-size: 1.25rem;
             }
         }
 
         .final-score {
-            font-size: 2.25rem;
-            color: var(--pure-white);
-            margin: var(--spacing-md) 0;
+            font-size: 1.5rem;
+            color: var(--primary-yellow);
+            margin: var(--spacing-sm) 0;
             font-weight: var(--font-weight-bold);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: var(--spacing-sm);
+            gap: var(--spacing-xs);
         }
         
         @media (max-width: 768px) {
             .final-score {
-                font-size: 1.75rem;
+                font-size: 1.25rem;
             }
         }
 
         .tier-unlocked {
-            background: linear-gradient(135deg, var(--primary-yellow), var(--electric-yellow));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-size: 1.75rem;
-            font-weight: var(--font-weight-black);
-            margin: var(--spacing-md) 0;
+            color: var(--primary-yellow);
+            font-size: 1rem;
+            font-weight: var(--font-weight-bold);
+            margin: var(--spacing-sm) 0;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.05em;
         }
         
         @media (max-width: 768px) {
             .tier-unlocked {
-                font-size: 1.25rem;
+                font-size: 0.875rem;
             }
         }
 
@@ -320,7 +357,21 @@
             transform: translate(-50%, -50%);
             text-align: center;
             z-index: 500;
+            min-width: 300px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            border: 2px solid var(--primary-yellow);
         }
+        
+        #loading-progress h2 {
+            color: var(--primary-yellow);
+            font-size: 2rem;
+            margin: 0 0 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
 
         .progress-bar {
             width: 300px;
@@ -328,38 +379,56 @@
             background: rgba(255, 255, 255, 0.1);
             border-radius: 5px;
             overflow: hidden;
-            margin: 20px 0;
+            margin: 20px auto;
+            border: 1px solid rgba(255, 255, 0, 0.3);
         }
 
         .progress-fill {
             height: 100%;
-            background: var(--primary);
+            background: var(--primary-yellow);
             width: 0%;
             transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
         }
 
         #twitter-verify {
-            margin-top: 20px;
-            padding: 20px;
-            background: rgba(29, 161, 242, 0.1);
-            border: 1px solid #1DA1F2;
-            border-radius: 10px;
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 0, 0.05);
+            border: 1px solid var(--primary-yellow);
+            border-radius: var(--border-radius);
             display: none;
         }
 
+        #twitter-verify p {
+            font-size: 0.875rem;
+            margin-bottom: var(--spacing-xs);
+            color: #ccc;
+        }
+
         .twitter-button {
-            background: #1DA1F2;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 24px;
+            background: transparent;
+            color: var(--primary-yellow);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border: 1px solid var(--primary-yellow);
+            border-radius: var(--border-radius);
             text-decoration: none;
             display: inline-block;
-            margin: 10px 0;
-            transition: transform 0.2s;
+            margin: var(--spacing-xs) 0;
+            font-size: 0.875rem;
+            transition: all 0.2s;
         }
 
         .twitter-button:hover {
-            transform: scale(1.05);
+            background: var(--primary-yellow);
+            color: var(--primary-black);
+        }
+        
+        #play-again:hover {
+            background: var(--primary-yellow) !important;
+            color: var(--primary-black) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 255, 0, 0.3);
         }
         
         /* Mobile Controls */
@@ -460,13 +529,18 @@
 </head>
 <body>
     <div id="game-container">
+        <!-- Back button for mobile -->
+        <a href="index.html" style="position: absolute; top: 10px; left: 10px; z-index: 1000; padding: 10px 20px; background: rgba(0,0,0,0.8); border: 1px solid var(--primary-yellow); border-radius: 20px; color: var(--primary-yellow); text-decoration: none; font-size: 0.9rem; display: none;" id="backButton">← Back</a>
+        
         <!-- Loading Screen -->
         <div id="loading-progress">
-            <h2>Loading LIGHTCAT Runner</h2>
+            <img src="images/RGB_LITE_CAT_LOGO.jpg" alt="Light Cat" style="width: 100px; height: 100px; margin-bottom: 20px;">
+            <h2>LIGHT CAT</h2>
+            <p style="color: #FFD700; margin: 10px 0;">Loading, please wait...</p>
             <div class="progress-bar">
                 <div class="progress-fill" id="progress-fill"></div>
             </div>
-            <p id="loading-text">Initializing game engine...</p>
+            <p id="loading-text" style="font-size: 0.9rem; color: #ccc;">Initializing game engine...</p>
         </div>
 
         <!-- Start Screen - Hidden as game starts automatically -->
@@ -476,43 +550,63 @@
         <div id="game-ui" style="display: none;">
             <div class="game-stats">
                 <h3>Time</h3>
-                <div class="timer" id="timer">60</div>
+                <div class="timer" id="timer">30</div>
             </div>
             
             <div class="game-stats">
                 <h3>Lightning Collected</h3>
                 <div class="score">
-                    <img src="images/lightning.svg" alt="⚡" class="lightning-icon">
+                    <img src="images/RGB_LITE_CAT_LOGO.jpg" alt="" class="lightning-icon">
                     <span id="score">0</span>
                 </div>
+            </div>
+            
+            <!-- Tier notification area -->
+            <div id="tier-notification" class="tier-notification" style="display: none;">
+                <span id="tier-notification-text"></span>
             </div>
         </div>
 
         <!-- Game Over Screen -->
         <div id="game-over">
-            <h2>Time's Up!</h2>
-            <div class="final-score">
-                <img src="images/lightning.svg" alt="⚡" class="lightning-icon" style="width: 50px; height: 50px;">
-                <span id="final-score">0</span>
-            </div>
-            <div class="tier-unlocked" id="tier-unlocked">No Tier Unlocked</div>
-            
-            <div id="twitter-verify">
-                <p>Share your achievement to unlock this tier!</p>
-                <a href="#" class="twitter-button" id="twitter-share" target="_blank">
-                    Share on Twitter
-                </a>
-                <button class="btn btn-secondary mt-3" id="verify-tweet">
-                    Verify Tweet
+            <div class="game-over-content">
+                <div class="final-score" style="font-size: 1.75rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <img src="images/RGB_LITE_CAT_LOGO.jpg" alt="" style="width: 28px; height: 28px;"> <span id="final-score">0</span>
+                </div>
+                
+                <div class="tier-unlocked" id="tier-unlocked" style="font-size: 1.125rem; margin-bottom: 1rem;">No Tier Unlocked</div>
+                
+                <div id="twitter-verify" style="margin-bottom: 1rem;">
+                    <p style="color: #ccc; margin-bottom: 0.5rem; font-size: 0.8rem;">To claim your tier allocation:</p>
+                    <h3 style="color: var(--primary-yellow); margin-bottom: 0.75rem; font-size: 0.9rem;">
+                        Follow @LIGHTCAT on X
+                    </h3>
+                    
+                    <a href="https://x.com/intent/follow?screen_name=LIGHTCAT" 
+                       class="twitter-button" 
+                       id="twitter-follow" 
+                       target="_blank"
+                       style="padding: 0.25rem 0.75rem; font-size: 0.8rem; display: inline-block; margin-bottom: 0.25rem;">
+                        Follow @LIGHTCAT
+                    </a>
+                    
+                    <p style="color: #666; font-size: 0.7rem; margin-top: 0.25rem; margin-bottom: 0.5rem;">
+                        Click follow, then verify to unlock
+                    </p>
+                    
+                    <button class="twitter-button" id="verify-follow" style="background: transparent; cursor: pointer; padding: 0.25rem 0.75rem; font-size: 0.8rem;">
+                        Verify Follow
+                    </button>
+                </div>
+
+                <button class="btn btn-primary" id="play-again" style="padding: var(--spacing-sm) var(--spacing-lg); font-size: 1rem; background: transparent; border: 2px solid var(--primary-yellow); color: var(--primary-yellow); transition: all 0.3s;">
+                    Play Again
+                </button>
+                
+                <button class="btn btn-secondary" id="unlock-tier" style="display: none; margin-top: var(--spacing-xs); padding: var(--spacing-sm) var(--spacing-lg); font-size: 1rem;">
+                    Proceed to Claim
                 </button>
             </div>
-
-            <button class="btn btn-primary btn-large" id="play-again" style="margin-top: var(--spacing-md);">
-                ⚡ Play Again ⚡
-            </button>
-            <button class="btn btn-secondary btn-large" id="unlock-tier" style="display: none; margin-top: var(--spacing-sm);">
-                Proceed to Purchase →
-            </button>
         </div>
 
         <!-- Three.js Canvas -->
@@ -539,5 +633,12 @@
     }
     </script>
     <script type="module" src="js/game/main.js"></script>
+    <script>
+        // Show back button on mobile
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            document.getElementById('backButton').style.display = 'block';
+        }
+        
+    </script>
 </body>
 </html>

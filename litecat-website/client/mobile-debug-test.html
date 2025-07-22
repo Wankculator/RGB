@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mobile WebGL Debug Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #FFFF00;
+            border-radius: 10px;
+            background: rgba(255, 255, 0, 0.1);
+        }
+        .success { color: #4CAF50; }
+        .error { color: #FF5252; }
+        .warning { color: #FFFF00; }
+        #testCanvas {
+            border: 2px solid #FFFF00;
+            display: block;
+            margin: 20px 0;
+            max-width: 100%;
+        }
+        .button {
+            background: #FFFF00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #debugLog {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #FFFF00;
+            padding: 10px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mobile WebGL Debug Test</h1>
+    
+    <!-- Device Info -->
+    <div class="test-section">
+        <h2>Device Information</h2>
+        <div id="deviceInfo"></div>
+    </div>
+    
+    <!-- WebGL Test -->
+    <div class="test-section">
+        <h2>WebGL Support Test</h2>
+        <div id="webglTest"></div>
+        <canvas id="testCanvas" width="300" height="200"></canvas>
+    </div>
+    
+    <!-- Three.js Test -->
+    <div class="test-section">
+        <h2>Three.js Test</h2>
+        <div id="threejsTest"></div>
+        <button class="button" onclick="testThreeJS()">Run Three.js Test</button>
+    </div>
+    
+    <!-- Memory Test -->
+    <div class="test-section">
+        <h2>Memory & Performance</h2>
+        <div id="memoryTest"></div>
+    </div>
+    
+    <!-- Module Loading Test -->
+    <div class="test-section">
+        <h2>ES Module Loading Test</h2>
+        <div id="moduleTest"></div>
+        <button class="button" onclick="testModuleLoading()">Test Module Loading</button>
+    </div>
+    
+    <!-- Debug Log -->
+    <div class="test-section">
+        <h2>Debug Log</h2>
+        <button class="button" onclick="clearLog()">Clear Log</button>
+        <div id="debugLog"></div>
+    </div>
+    
+    <script>
+        // Debug logging
+        const debugLog = [];
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = { time: timestamp, message, type };
+            debugLog.push(entry);
+            
+            const logDiv = document.getElementById('debugLog');
+            const entryDiv = document.createElement('div');
+            entryDiv.className = `log-entry ${type}`;
+            entryDiv.innerHTML = `<span class="${type}">[${timestamp}]</span> ${message}`;
+            logDiv.appendChild(entryDiv);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            console.log(`[${type}] ${message}`);
+        }
+        
+        function clearLog() {
+            document.getElementById('debugLog').innerHTML = '';
+            debugLog.length = 0;
+        }
+        
+        // Device Info
+        function getDeviceInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                screenWidth: window.screen.width,
+                screenHeight: window.screen.height,
+                pixelRatio: window.devicePixelRatio,
+                innerWidth: window.innerWidth,
+                innerHeight: window.innerHeight,
+                isIOS: /iPhone|iPad|iPod/i.test(navigator.userAgent),
+                isAndroid: /Android/i.test(navigator.userAgent),
+                isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+            };
+            
+            let html = '';
+            for (const [key, value] of Object.entries(info)) {
+                html += `<div><strong>${key}:</strong> ${value}</div>`;
+            }
+            document.getElementById('deviceInfo').innerHTML = html;
+            
+            log(`Device: ${info.isIOS ? 'iOS' : info.isAndroid ? 'Android' : 'Other'}`);
+            log(`Screen: ${info.screenWidth}x${info.screenHeight} @ ${info.pixelRatio}x`);
+        }
+        
+        // WebGL Test
+        function testWebGL() {
+            const canvas = document.getElementById('testCanvas');
+            let gl = null;
+            let contextType = '';
+            
+            try {
+                // Try WebGL2 first
+                gl = canvas.getContext('webgl2');
+                if (gl) {
+                    contextType = 'WebGL2';
+                } else {
+                    gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    contextType = gl ? 'WebGL' : 'None';
+                }
+                
+                if (!gl) {
+                    throw new Error('WebGL not supported');
+                }
+                
+                // Get WebGL info
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                const vendor = gl.getParameter(debugInfo ? debugInfo.UNMASKED_VENDOR_WEBGL : gl.VENDOR);
+                const renderer = gl.getParameter(debugInfo ? debugInfo.UNMASKED_RENDERER_WEBGL : gl.RENDERER);
+                
+                const info = {
+                    contextType,
+                    vendor,
+                    renderer,
+                    version: gl.getParameter(gl.VERSION),
+                    shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+                    maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
+                    maxViewportDims: gl.getParameter(gl.MAX_VIEWPORT_DIMS),
+                    maxRenderBufferSize: gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),
+                    extensions: gl.getSupportedExtensions().length
+                };
+                
+                let html = '<div class="success">✓ WebGL is supported!</div>';
+                for (const [key, value] of Object.entries(info)) {
+                    html += `<div><strong>${key}:</strong> ${value}</div>`;
+                }
+                document.getElementById('webglTest').innerHTML = html;
+                
+                // Draw test
+                gl.clearColor(0.0, 0.0, 1.0, 1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                
+                log(`WebGL ${contextType} initialized successfully`, 'success');
+                log(`Renderer: ${renderer}`);
+                
+                // Test context loss handling
+                canvas.addEventListener('webglcontextlost', (e) => {
+                    e.preventDefault();
+                    log('WebGL context lost!', 'error');
+                });
+                
+                canvas.addEventListener('webglcontextrestored', () => {
+                    log('WebGL context restored', 'success');
+                });
+                
+            } catch (error) {
+                document.getElementById('webglTest').innerHTML = 
+                    `<div class="error">✗ WebGL Error: ${error.message}</div>`;
+                log(`WebGL test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Three.js Test
+        function testThreeJS() {
+            log('Starting Three.js test...');
+            
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/three@0.160.0/build/three.min.js';
+            
+            script.onload = () => {
+                log('Three.js loaded successfully', 'success');
+                
+                try {
+                    const testDiv = document.createElement('div');
+                    testDiv.style.width = '300px';
+                    testDiv.style.height = '200px';
+                    testDiv.style.border = '2px solid yellow';
+                    testDiv.style.margin = '10px 0';
+                    document.getElementById('threejsTest').appendChild(testDiv);
+                    
+                    const scene = new THREE.Scene();
+                    const camera = new THREE.PerspectiveCamera(75, 300/200, 0.1, 1000);
+                    
+                    const renderer = new THREE.WebGLRenderer({
+                        antialias: false,
+                        powerPreference: "low-power"
+                    });
+                    renderer.setSize(300, 200);
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                    testDiv.appendChild(renderer.domElement);
+                    
+                    // Create simple cube
+                    const geometry = new THREE.BoxGeometry();
+                    const material = new THREE.MeshBasicMaterial({ color: 0xFFFF00 });
+                    const cube = new THREE.Mesh(geometry, material);
+                    scene.add(cube);
+                    
+                    camera.position.z = 5;
+                    
+                    let frameCount = 0;
+                    const startTime = performance.now();
+                    
+                    function animate() {
+                        if (frameCount < 60) {
+                            requestAnimationFrame(animate);
+                            cube.rotation.x += 0.01;
+                            cube.rotation.y += 0.01;
+                            renderer.render(scene, camera);
+                            frameCount++;
+                        } else {
+                            const elapsed = performance.now() - startTime;
+                            const fps = Math.round(60000 / elapsed);
+                            log(`Three.js test complete: ${fps} FPS`, 'success');
+                            
+                            const result = document.createElement('div');
+                            result.className = 'success';
+                            result.innerHTML = `✓ Three.js working! Average FPS: ${fps}`;
+                            document.getElementById('threejsTest').insertBefore(result, testDiv);
+                        }
+                    }
+                    
+                    animate();
+                    
+                } catch (error) {
+                    log(`Three.js error: ${error.message}`, 'error');
+                    document.getElementById('threejsTest').innerHTML += 
+                        `<div class="error">✗ Three.js Error: ${error.message}</div>`;
+                }
+            };
+            
+            script.onerror = () => {
+                log('Failed to load Three.js', 'error');
+                document.getElementById('threejsTest').innerHTML = 
+                    '<div class="error">✗ Failed to load Three.js</div>';
+            };
+            
+            document.head.appendChild(script);
+        }
+        
+        // Memory Test
+        function testMemory() {
+            let html = '';
+            
+            if (performance.memory) {
+                const mb = 1024 * 1024;
+                html = `
+                    <div><strong>JS Heap Size:</strong> ${Math.round(performance.memory.usedJSHeapSize / mb)} MB</div>
+                    <div><strong>JS Heap Limit:</strong> ${Math.round(performance.memory.jsHeapSizeLimit / mb)} MB</div>
+                    <div><strong>Total JS Heap:</strong> ${Math.round(performance.memory.totalJSHeapSize / mb)} MB</div>
+                `;
+                log(`Memory usage: ${Math.round(performance.memory.usedJSHeapSize / mb)} MB`);
+            } else {
+                html = '<div class="warning">Memory API not available (iOS)</div>';
+                log('Memory API not available', 'warning');
+            }
+            
+            // Test available memory by creating buffers
+            try {
+                const testSize = 10 * 1024 * 1024; // 10MB
+                const buffer = new ArrayBuffer(testSize);
+                html += '<div class="success">✓ Can allocate 10MB buffer</div>';
+                log('Memory allocation test passed', 'success');
+            } catch (error) {
+                html += '<div class="error">✗ Cannot allocate 10MB buffer</div>';
+                log('Memory allocation failed', 'error');
+            }
+            
+            document.getElementById('memoryTest').innerHTML = html;
+        }
+        
+        // Module Loading Test
+        async function testModuleLoading() {
+            log('Testing ES module loading...');
+            
+            try {
+                // Test dynamic import
+                const testModule = await import('data:text/javascript,export const test = "Module loaded successfully";');
+                
+                if (testModule.test === "Module loaded successfully") {
+                    document.getElementById('moduleTest').innerHTML = 
+                        '<div class="success">✓ ES Modules are supported!</div>';
+                    log('ES module loading successful', 'success');
+                    
+                    // Test import map
+                    const script = document.createElement('script');
+                    script.type = 'importmap';
+                    script.textContent = JSON.stringify({
+                        imports: {
+                            "test": "data:text/javascript,export const value = 42;"
+                        }
+                    });
+                    document.head.appendChild(script);
+                    
+                    // Try to use import map
+                    try {
+                        await import('test');
+                        document.getElementById('moduleTest').innerHTML += 
+                            '<div class="success">✓ Import maps are supported!</div>';
+                        log('Import maps supported', 'success');
+                    } catch (e) {
+                        document.getElementById('moduleTest').innerHTML += 
+                            '<div class="warning">⚠ Import maps not supported</div>';
+                        log('Import maps not supported', 'warning');
+                    }
+                }
+            } catch (error) {
+                document.getElementById('moduleTest').innerHTML = 
+                    `<div class="error">✗ Module loading error: ${error.message}</div>`;
+                log(`Module loading failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Run tests on load
+        window.addEventListener('load', () => {
+            log('Page loaded, running tests...');
+            getDeviceInfo();
+            testWebGL();
+            testMemory();
+            
+            // Monitor errors
+            window.addEventListener('error', (e) => {
+                log(`Global error: ${e.message} at ${e.filename}:${e.lineno}`, 'error');
+            });
+            
+            window.addEventListener('unhandledrejection', (e) => {
+                log(`Unhandled promise rejection: ${e.reason}`, 'error');
+            });
+        });
+    </script>
+</body>
+</html>

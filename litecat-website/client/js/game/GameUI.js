@@ -2,11 +2,11 @@ export class GameUI {
     constructor(game) {
         this.game = game;
         this.tiers = {
-            bronze: { min: 10, tokens: 5000 },
-            silver: { min: 25, tokens: 15000 },
-            gold: { min: 50, tokens: 50000 },
-            platinum: { min: 75, tokens: 100000 }
+            bronze: { min: 11, tokens: 5000 },
+            silver: { min: 18, tokens: 15000 },
+            gold: { min: 28, tokens: 50000 }
         };
+        this.unlockedTiers = new Set();
     }
 
     showGameOver(score) {
@@ -15,6 +15,13 @@ export class GameUI {
         const tierUnlockedEl = document.getElementById('tier-unlocked');
         const twitterVerifyEl = document.getElementById('twitter-verify');
         const unlockTierBtn = document.getElementById('unlock-tier');
+        const verifyBtn = document.getElementById('verify-follow');
+        
+        // Reset verify button state
+        verifyBtn.textContent = 'Verify Follow';
+        verifyBtn.disabled = false;
+        verifyBtn.style.opacity = '1';
+        unlockTierBtn.style.display = 'none';
         
         // Show final score
         finalScoreEl.textContent = score;
@@ -24,51 +31,47 @@ export class GameUI {
         
         if (tier) {
             tierUnlockedEl.textContent = `${tier.toUpperCase()} TIER UNLOCKED!`;
-            tierUnlockedEl.style.display = 'block';
+            tierUnlockedEl.style.color = this.getTierColor(tier);
             
             // Show Twitter verification
             twitterVerifyEl.style.display = 'block';
-            
-            // Setup Twitter share link
-            const tweetText = encodeURIComponent(
-                `🐱⚡ I just collected ${score} lightning bolts in LIGHTCAT Runner and unlocked the ${tier} tier! 
-
-Join the first cat meme token on RGB Protocol: litecat.xyz
-
-#LIGHTCAT #RGB #Bitcoin #Gaming`
-            );
-            
-            const twitterShareBtn = document.getElementById('twitter-share');
-            twitterShareBtn.href = `https://twitter.com/intent/tweet?text=${tweetText}`;
             
             // Store tier data
             this.unlockedTier = tier;
         } else {
             tierUnlockedEl.textContent = 'No Tier Unlocked - Try Again!';
-            tierUnlockedEl.style.display = 'block';
+            tierUnlockedEl.style.color = '#666';
             twitterVerifyEl.style.display = 'none';
         }
         
-        // Show game over screen
+        // Show game over screen with fade in
         gameOverEl.style.display = 'block';
-        
-        // Animate in
         gameOverEl.style.opacity = '0';
-        gameOverEl.style.transform = 'translate(-50%, -50%) scale(0.8)';
         
         setTimeout(() => {
-            gameOverEl.style.transition = 'all 0.5s ease-out';
+            gameOverEl.style.transition = 'opacity 0.5s ease-out';
             gameOverEl.style.opacity = '1';
-            gameOverEl.style.transform = 'translate(-50%, -50%) scale(1)';
         }, 100);
+        
+        // Clear previous follow tracking
+        localStorage.removeItem('twitterFollowClicked');
+        localStorage.removeItem('followClickTime');
     }
 
     getTierForScore(score) {
-        if (score >= this.tiers.platinum.min) return 'platinum';
         if (score >= this.tiers.gold.min) return 'gold';
         if (score >= this.tiers.silver.min) return 'silver';
         if (score >= this.tiers.bronze.min) return 'bronze';
         return null;
+    }
+    
+    getTierColor(tier) {
+        const colors = {
+            bronze: '#CD7F32',
+            silver: '#C0C0C0',
+            gold: '#FFD700'
+        };
+        return colors[tier] || '#FFFF00';
     }
 
     updateScore(score) {
@@ -80,6 +83,9 @@ Join the first cat meme token on RGB Protocol: litecat.xyz
         setTimeout(() => {
             scoreEl.style.transform = 'scale(1)';
         }, 200);
+        
+        // Check for tier unlocks
+        this.checkTierUnlock(score);
     }
 
     updateTimer(time) {
@@ -126,6 +132,42 @@ Join the first cat meme token on RGB Protocol: litecat.xyz
         if (combo > 1) {
             this.showMessage(`${combo}x COMBO!`, 1000);
         }
+    }
+    
+    checkTierUnlock(score) {
+        // Check each tier
+        for (const [tierName, tierData] of Object.entries(this.tiers)) {
+            if (score >= tierData.min && !this.unlockedTiers.has(tierName)) {
+                this.unlockedTiers.add(tierName);
+                this.showTierNotification(tierName);
+            }
+        }
+    }
+    
+    showTierNotification(tier) {
+        const notification = document.getElementById('tier-notification');
+        const notificationText = document.getElementById('tier-notification-text');
+        
+        if (!notification || !notificationText) return;
+        
+        // Set tier text and color
+        notificationText.textContent = `${tier.toUpperCase()} TIER UNLOCKED!`;
+        notification.style.borderColor = this.getTierColor(tier);
+        notificationText.style.color = this.getTierColor(tier);
+        
+        // Show notification
+        notification.style.display = 'block';
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        
+        // Hide after 2 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 300);
+        }, 2000);
     }
 
     showTierProgress(score) {

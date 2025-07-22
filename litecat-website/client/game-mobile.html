@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Light Cat - Mobile Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        
+        #gameUI {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 100;
+            pointer-events: none;
+        }
+        
+        .stat {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-weight: bold;
+        }
+        
+        #backButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #FFD700;
+            border-radius: 20px;
+            color: #FFD700;
+            text-decoration: none;
+            z-index: 200;
+        }
+        
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #FFD700;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            display: none;
+            z-index: 300;
+        }
+        
+        #gameOver h2 {
+            color: #FFD700;
+            margin-bottom: 20px;
+        }
+        
+        #gameOver button {
+            padding: 10px 30px;
+            background: transparent;
+            border: 2px solid #FFD700;
+            color: #FFD700;
+            border-radius: 20px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" id="backButton">← Back</a>
+    
+    <div id="gameUI">
+        <div class="stat">Time: <span id="timer">30</span></div>
+        <div class="stat">Score: <span id="score">0</span></div>
+    </div>
+    
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="gameOver">
+        <h2>Game Over!</h2>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <p id="tierUnlocked">No Tier Unlocked</p>
+        <button onclick="location.reload()">Play Again</button>
+        <button onclick="location.href='index.html'">Back to Site</button>
+    </div>
+    
+    <script>
+        // Simple 2D mobile game
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Game state
+        let score = 0;
+        let timeRemaining = 30;
+        let gameRunning = true;
+        let lastTime = 0;
+        
+        // Player (cat)
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 100,
+            size: 30,
+            speed: 5,
+            targetX: canvas.width / 2
+        };
+        
+        // Lightning bolts
+        const bolts = [];
+        const maxBolts = 5;
+        
+        // Create lightning bolt
+        function createBolt() {
+            bolts.push({
+                x: Math.random() * (canvas.width - 40) + 20,
+                y: -30,
+                size: 20,
+                speed: 2 + Math.random() * 2,
+                collected: false
+            });
+        }
+        
+        // Touch controls
+        canvas.addEventListener('touchstart', handleTouch);
+        canvas.addEventListener('touchmove', handleTouch);
+        canvas.addEventListener('mousedown', handleTouch);
+        canvas.addEventListener('mousemove', handleTouch);
+        
+        function handleTouch(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+            player.targetX = x;
+        }
+        
+        // Game timer
+        const gameTimer = setInterval(() => {
+            if (gameRunning) {
+                timeRemaining--;
+                document.getElementById('timer').textContent = timeRemaining;
+                
+                if (timeRemaining <= 0) {
+                    endGame();
+                }
+            }
+        }, 1000);
+        
+        // Bolt spawn timer
+        const spawnTimer = setInterval(() => {
+            if (gameRunning && bolts.length < maxBolts) {
+                createBolt();
+            }
+        }, 1000);
+        
+        // Game loop
+        function gameLoop(currentTime) {
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+            
+            if (!gameRunning) return;
+            
+            // Clear canvas
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Update player position
+            const dx = player.targetX - player.x;
+            player.x += dx * 0.1;
+            
+            // Keep player in bounds
+            player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
+            
+            // Draw player (cat)
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Cat ears
+            ctx.beginPath();
+            ctx.moveTo(player.x - 20, player.y - 25);
+            ctx.lineTo(player.x - 10, player.y - 35);
+            ctx.lineTo(player.x, player.y - 25);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(player.x + 20, player.y - 25);
+            ctx.lineTo(player.x + 10, player.y - 35);
+            ctx.lineTo(player.x, player.y - 25);
+            ctx.fill();
+            
+            // Update and draw bolts
+            for (let i = bolts.length - 1; i >= 0; i--) {
+                const bolt = bolts[i];
+                
+                // Move bolt
+                bolt.y += bolt.speed;
+                
+                // Remove if off screen
+                if (bolt.y > canvas.height + 30) {
+                    bolts.splice(i, 1);
+                    continue;
+                }
+                
+                // Check collision
+                const dist = Math.sqrt(
+                    Math.pow(bolt.x - player.x, 2) + 
+                    Math.pow(bolt.y - player.y, 2)
+                );
+                
+                if (dist < player.size + bolt.size) {
+                    // Collected!
+                    score++;
+                    document.getElementById('score').textContent = score;
+                    bolts.splice(i, 1);
+                    
+                    // Show tier notification
+                    checkTierUnlock();
+                    continue;
+                }
+                
+                // Draw bolt
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(bolt.x, bolt.y);
+                ctx.lineTo(bolt.x - 10, bolt.y + 15);
+                ctx.lineTo(bolt.x + 5, bolt.y + 15);
+                ctx.lineTo(bolt.x - 5, bolt.y + 30);
+                ctx.stroke();
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function checkTierUnlock() {
+            let notification = '';
+            if (score === 11) notification = 'Bronze Tier Unlocked!';
+            else if (score === 18) notification = 'Silver Tier Unlocked!';
+            else if (score === 28) notification = 'Gold Tier Unlocked!';
+            
+            if (notification) {
+                // Show brief notification
+                const div = document.createElement('div');
+                div.style.cssText = `
+                    position: absolute;
+                    top: 100px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(0,0,0,0.9);
+                    border: 2px solid #FFD700;
+                    padding: 10px 20px;
+                    border-radius: 20px;
+                    color: #FFD700;
+                    font-weight: bold;
+                    z-index: 150;
+                `;
+                div.textContent = notification;
+                document.body.appendChild(div);
+                
+                setTimeout(() => div.remove(), 2000);
+            }
+        }
+        
+        function endGame() {
+            gameRunning = false;
+            clearInterval(gameTimer);
+            clearInterval(spawnTimer);
+            
+            // Determine tier
+            let tier = 'No Tier';
+            if (score >= 28) tier = 'Gold Tier';
+            else if (score >= 18) tier = 'Silver Tier';
+            else if (score >= 11) tier = 'Bronze Tier';
+            
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('tierUnlocked').textContent = tier + ' Unlocked!';
+            document.getElementById('gameOver').style.display = 'block';
+        }
+        
+        // Start game
+        requestAnimationFrame(gameLoop);
+        
+        // Initial bolts
+        for (let i = 0; i < 3; i++) {
+            setTimeout(() => createBolt(), i * 500);
+        }
+    </script>
+</body>
+</html>

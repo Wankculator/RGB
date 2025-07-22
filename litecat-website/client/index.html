@@ -322,7 +322,6 @@
 
         /* Game Section */
         .game-section {
-            background: var(--dark-gray);
             position: relative;
             overflow: hidden;
         }
@@ -427,11 +426,7 @@
         .game-container {
             max-width: 900px;
             margin: 0 auto;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid rgba(255, 255, 0, 0.2);
-            border-radius: 20px;
             padding: 30px;
-            backdrop-filter: blur(10px);
         }
 
         #gameCanvas {
@@ -603,7 +598,121 @@
             box-shadow: 0 10px 30px rgba(255, 255, 0, 0.5);
         }
 
-        /* Responsive */
+        /* Responsive - Small phones like iPhone SE */
+        @media (max-width: 375px) {
+            .container {
+                padding: 0 15px;
+            }
+            
+            .site-title {
+                font-size: 1.5rem !important;
+            }
+            
+            .logo {
+                width: 40px !important;
+                height: 40px !important;
+            }
+            
+            .section-title {
+                font-size: 1.5rem !important;
+                letter-spacing: 1px !important;
+            }
+            
+            /* Purchase form optimization */
+            .purchase-form {
+                padding: 20px !important;
+            }
+            
+            .form-input {
+                padding: 12px !important;
+                font-size: 0.875rem !important;
+            }
+            
+            .batch-selector {
+                gap: 15px !important;
+            }
+            
+            .batch-btn {
+                width: 35px !important;
+                height: 35px !important;
+                font-size: 1.2rem !important;
+            }
+            
+            .batch-count {
+                font-size: 2rem !important;
+            }
+            
+            /* Modal optimization */
+            .modal-content {
+                padding: 20px !important;
+                margin: 10px !important;
+                width: calc(100% - 20px) !important;
+            }
+            
+            .modal-content h3 {
+                font-size: 1.2rem !important;
+            }
+            
+            #paymentAmount {
+                font-size: 0.9rem !important;
+                padding: 10px !important;
+            }
+            
+            #paymentAddress {
+                font-size: 0.75rem !important;
+                padding: 10px !important;
+            }
+            
+            /* Stats optimization */
+            .stat-number {
+                font-size: 1.5rem !important;
+            }
+            
+            /* Tier cards */
+            .tier-card {
+                padding: 20px !important;
+            }
+            
+            .tier-card h3 {
+                font-size: 1.2rem !important;
+            }
+            
+            /* Game specific */
+            #gameWrapper {
+                height: 350px !important;
+            }
+            
+            #gameStartScreen img {
+                width: 50px !important;
+                height: 50px !important;
+            }
+            
+            #gameStartScreen h3 {
+                font-size: 1rem !important;
+            }
+            
+            #gameStartScreen p {
+                font-size: 0.75rem !important;
+            }
+            
+            #startGameBtn {
+                font-size: 0.8rem !important;
+                padding: 10px 25px !important;
+            }
+            
+            /* Bitcoin amount display */
+            #totalBTC {
+                font-size: 1.8rem !important;
+            }
+            
+            /* Footer */
+            footer {
+                padding: 30px 0 !important;
+                font-size: 0.8rem !important;
+            }
+        }
+        
+        /* Responsive - Tablets and medium phones */
         @media (max-width: 768px) {
             .tier-grid {
                 grid-template-columns: 1fr;
@@ -621,18 +730,92 @@
                 height: 400px !important;
             }
             
+            /* Game start screen mobile optimization */
+            #gameStartScreen {
+                padding: 20px !important;
+            }
+            
+            #gameStartScreen img {
+                width: 60px !important;
+                height: 60px !important;
+                margin-bottom: 10px !important;
+            }
+            
             #gameStartScreen h3 {
-                font-size: 1.8rem !important;
+                font-size: 1.2rem !important;
+                letter-spacing: 2px !important;
             }
             
             #gameStartScreen p {
-                font-size: 1rem !important;
-                padding: 0 20px;
+                font-size: 0.8rem !important;
+                padding: 0 10px;
+                margin: 0 0 20px 0 !important;
+                line-height: 1.3 !important;
             }
             
             #startGameBtn {
-                font-size: 1rem !important;
-                padding: 15px 40px !important;
+                font-size: 0.9rem !important;
+                padding: 12px 30px !important;
+                margin-bottom: 20px !important;
+            }
+            
+            /* Hide keyboard controls on mobile */
+            #gameStartScreen > div:last-child {
+                display: none !important;
+            }
+            
+            /* Additional mobile optimizations */
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                padding: 20px 15px !important;
+            }
+            
+            .logo-section {
+                margin-bottom: 20px;
+                flex-direction: column;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .purchase-form {
+                padding: 30px 20px !important;
+                border-radius: 20px;
+            }
+            
+            .form-label {
+                font-size: 0.875rem !important;
+            }
+            
+            .btn {
+                padding: 12px 30px !important;
+                font-size: 0.9rem !important;
+            }
+            
+            /* Payment modal */
+            .modal-content {
+                width: 95% !important;
+                max-width: none !important;
+                margin: 20px !important;
+                padding: 30px 20px !important;
+            }
+            
+            .payment-qr {
+                width: 200px !important;
+                height: 200px !important;
+            }
+            
+            /* Navigation */
+            nav {
+                display: none;
             }
         }
     </style>
@@ -651,7 +834,7 @@
                     <div class="logo-section">
                         <img src="logo.jpg" alt="RGBLightCat Logo" class="logo">
                         <div>
-                            <h1 class="site-title">RGBLIGHTCAT</h1>
+                            <h1 class="site-title">LIGHTCAT</h1>
                             <p class="tagline">First Cat Meme Token on RGB Protocol</p>
                         </div>
                     </div>
@@ -700,19 +883,19 @@
                     <div class="tier-card" id="tier3">
                         <div class="tier-number">1</div>
                         <div class="tier-name">Gold</div>
-                        <div class="tier-requirement">Score: 101+</div>
+                        <div class="tier-requirement">Score: 28+ ⚡</div>
                         <div class="tier-reward">Max: 10 Batches</div>
                     </div>
                     <div class="tier-card" id="tier2">
                         <div class="tier-number">2</div>
                         <div class="tier-name">Silver</div>
-                        <div class="tier-requirement">Score: 51-100</div>
+                        <div class="tier-requirement">Score: 18-27 ⚡</div>
                         <div class="tier-reward">Max: 8 Batches</div>
                     </div>
                     <div class="tier-card" id="tier1">
                         <div class="tier-number">3</div>
                         <div class="tier-name">Bronze</div>
-                        <div class="tier-requirement">Score: 0-50</div>
+                        <div class="tier-requirement">Score: 11-17 ⚡</div>
                         <div class="tier-reward">Max: 5 Batches</div>
                     </div>
                 </div>
@@ -720,17 +903,20 @@
                 <div class="game-container" style="position: relative;">
                     <div id="gameWrapper" style="position: relative; width: 100%; height: 500px; background: #000; border-radius: 20px; overflow: visible; border: 2px solid rgba(255, 255, 0, 0.3);">
                         <iframe id="gameFrame" src="" style="width: 100%; height: 100%; border: none; display: none; border-radius: 20px;" tabindex="0"></iframe>
-                        <div id="clickToFocus" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); border: 2px solid var(--yellow); padding: 20px 40px; border-radius: 10px; display: none; pointer-events: none; z-index: 100;">
-                            <p style="color: var(--yellow); font-weight: 600; text-transform: uppercase; margin: 0;">Click to activate game controls</p>
+                        <div id="clickToFocus" style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); border: 1px solid var(--yellow); padding: 10px 20px; border-radius: 20px; display: none; pointer-events: none; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">
+                            <p style="color: var(--yellow); font-weight: 600; text-transform: uppercase; margin: 0; font-size: 0.8rem; letter-spacing: 1px;">Click to activate game controls</p>
                         </div>
                         <div id="gameStartScreen" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 10; padding: 40px; border-radius: 20px;">
-                            <h3 style="color: var(--yellow); font-size: 1.8rem; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 4px; font-weight: 700;">LIGHTCAT RUNNER ⚡</h3>
-                            <p style="color: rgba(255,255,255,0.7); margin: 0 0 30px 0; text-align: center; max-width: 400px; font-size: 0.95rem; line-height: 1.4;">Control the cat and collect lightning bolts to unlock exclusive purchase tiers!</p>
-                            <button class="btn" id="startGameBtn" style="font-size: 1rem; padding: 18px 50px; margin-bottom: 30px;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <img src="images/RGB_LITE_CAT_LOGO.jpg" alt="" style="width: 120px; height: 120px; margin-bottom: 15px;">
+                                <h3 style="color: var(--yellow); font-size: 1.8rem; margin: 0; text-transform: uppercase; letter-spacing: 4px; font-weight: 700;">LIGHT CAT</h3>
+                            </div>
+                            <p style="color: rgba(255,255,255,0.7); margin: 0 0 30px 0; text-align: center; max-width: 400px; font-size: 0.95rem; line-height: 1.4;">Control the cat and collect lightning bolts in 30 seconds to unlock exclusive purchase tiers!</p>
+                            <button class="btn" id="startGameBtn" style="font-size: 1rem; padding: 18px 50px; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; line-height: 1;">
                                 START GAME
                             </button>
                             <div style="width: 100%; max-width: 500px; margin-top: auto;">
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; color: rgba(255,255,255,0.6); font-size: 0.85rem;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center; color: rgba(255,255,255,0.6); font-size: 0.85rem;">
                                     <div><span style="color: var(--yellow); font-weight: 600;">W/↑</span> Move Forward</div>
                                     <div><span style="color: var(--yellow); font-weight: 600;">S/↓</span> Move Backward</div>
                                     <div><span style="color: var(--yellow); font-weight: 600;">A/←</span> Move Left</div>
@@ -782,7 +968,7 @@
                         <div style="font-size: 2.5rem; font-weight: 700; color: var(--yellow); font-family: 'JetBrains Mono', monospace;" id="totalBTC">0.00002000 BTC</div>
                         <div style="margin-top: 10px; color: rgba(255, 255, 255, 0.7);">
                             <span id="totalSats">2,000</span> satoshis • 
-                            <span id="tokenAmount">700</span> RGBLIGHTCAT tokens
+                            <span id="tokenAmount">700</span> LIGHTCAT tokens
                         </div>
                     </div>
                     
@@ -1087,22 +1273,79 @@
             
             if (startGameBtn && gameFrame && gameStartScreen) {
                 startGameBtn.addEventListener('click', function() {
-                    // Hide start screen
+                    console.log('Start game clicked');
+                    
+                    // Check if on mobile
+                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    
+                    // On mobile, navigate directly to mobile-optimized game page
+                    if (isMobile) {
+                        console.log('Mobile device - navigating to mobile game');
+                        // Check WebGL support
+                        const canvas = document.createElement('canvas');
+                        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                        
+                        if (!gl) {
+                            console.log('WebGL not supported - using 2D fallback');
+                            window.location.href = 'game-mobile.html';
+                        } else {
+                            console.log('WebGL supported - trying 3D game');
+                            window.location.href = 'game.html';
+                        }
+                        return;
+                    }
+                    
+                    // Desktop: use iframe as before
+                    // Hide start screen  
                     gameStartScreen.style.display = 'none';
+                    
+                    // Set a loading timeout
+                    let loadTimeout;
                     
                     // Show and load game
                     gameFrame.style.display = 'block';
                     gameFrame.src = 'game.html';
                     
-                    // Show fullscreen button
-                    fullscreenBtn.style.display = 'inline-block';
+                    // Set loading timeout for desktop
+                    loadTimeout = setTimeout(() => {
+                        console.error('Game loading timeout');
+                        gameStartScreen.style.display = 'flex';
+                        gameStartScreen.innerHTML = '<div style="text-align: center; padding: 20px;"><p style="color: #ff5252; margin-bottom: 20px;">Game loading timeout.</p><button class="btn" onclick="location.reload()">Try Again</button></div>';
+                    }, 10000);
+                    
+                    // Show fullscreen button only on desktop
+                    if (fullscreenBtn && !isMobile) {
+                        fullscreenBtn.style.display = 'inline-block';
+                    }
                     
                     // Scroll to game
                     gameWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     
-                    // Focus the iframe after it loads
+                    // Add error handler
+                    gameFrame.onerror = function(e) {
+                        clearTimeout(loadTimeout);
+                        console.error('Game iframe error:', e);
+                        gameStartScreen.style.display = 'flex';
+                        gameStartScreen.innerHTML = '<div style="text-align: center; padding: 20px;"><p style="color: #ff5252; margin-bottom: 20px;">Error loading game.</p><button class="btn" onclick="location.reload()">Try Again</button></div>';
+                    };
+                    
+                    // Handle iframe load events
                     gameFrame.onload = function() {
-                        gameFrame.focus();
+                        clearTimeout(loadTimeout);
+                        console.log('Game iframe loaded successfully');
+                        
+                        // Check if iframe content is accessible
+                        try {
+                            const iframeDoc = gameFrame.contentDocument || gameFrame.contentWindow.document;
+                            console.log('Iframe document accessible:', !!iframeDoc);
+                        } catch (e) {
+                            console.log('Cannot access iframe content (cross-origin):', e.message);
+                        }
+                        
+                        // Don't try to focus on mobile
+                        if (!isMobile) {
+                            gameFrame.focus();
+                        }
                         
                         // Add message about clicking to focus
                         const clickToFocus = document.getElementById('clickToFocus');
@@ -1112,6 +1355,12 @@
                             const isFocused = document.activeElement === gameFrame;
                             if (!isFocused && gameFrame.style.display === 'block') {
                                 clickToFocus.style.display = 'block';
+                                // Add fade-in effect
+                                clickToFocus.style.opacity = '0';
+                                setTimeout(() => {
+                                    clickToFocus.style.transition = 'opacity 0.3s ease';
+                                    clickToFocus.style.opacity = '1';
+                                }, 10);
                             } else {
                                 clickToFocus.style.display = 'none';
                             }

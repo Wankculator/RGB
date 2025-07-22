@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebGL Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid yellow;
+            display: block;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: green; }
+        .error { background: red; }
+    </style>
+</head>
+<body>
+    <h1>WebGL Test</h1>
+    <div id="results"></div>
+    <canvas id="testCanvas" width="300" height="200"></canvas>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(text, success) {
+            const div = document.createElement('div');
+            div.className = 'status ' + (success ? 'success' : 'error');
+            div.textContent = text;
+            results.appendChild(div);
+        }
+        
+        // Test 1: Basic WebGL
+        const canvas = document.getElementById('testCanvas');
+        let gl = canvas.getContext('webgl');
+        
+        if (!gl) {
+            gl = canvas.getContext('experimental-webgl');
+        }
+        
+        if (gl) {
+            addResult('✓ WebGL is supported', true);
+            
+            // Try to draw something
+            gl.clearColor(0.0, 0.0, 1.0, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            addResult('✓ WebGL rendering works', true);
+        } else {
+            addResult('✗ WebGL is NOT supported', false);
+        }
+        
+        // Test 2: Three.js
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/three@0.160.0/build/three.min.js';
+        script.onload = function() {
+            addResult('✓ Three.js loaded', true);
+            
+            try {
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({ canvas: canvas });
+                renderer.setSize(300, 200);
+                
+                const geometry = new THREE.BoxGeometry();
+                const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+                const cube = new THREE.Mesh(geometry, material);
+                scene.add(cube);
+                
+                camera.position.z = 5;
+                renderer.render(scene, camera);
+                
+                addResult('✓ Three.js rendering works', true);
+            } catch (e) {
+                addResult('✗ Three.js error: ' + e.message, false);
+            }
+        };
+        script.onerror = function() {
+            addResult('✗ Three.js failed to load', false);
+        };
+        document.head.appendChild(script);
+        
+        // Show user agent
+        addResult('User Agent: ' + navigator.userAgent, true);
+    </script>
+</body>
+</html>

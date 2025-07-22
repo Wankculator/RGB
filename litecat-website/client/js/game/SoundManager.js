@@ -24,24 +24,39 @@ export class SoundManager {
     }
 
     createCollectSound() {
+        let lastPlayTime = 0;
         return () => {
             if (!this.enabled) return;
             
-            const oscillator = this.audioContext.createOscillator();
-            const gainNode = this.audioContext.createGain();
+            // Throttle sound playback to prevent overlap
+            const now = performance.now();
+            if (now - lastPlayTime < 50) return;
+            lastPlayTime = now;
             
-            oscillator.connect(gainNode);
-            gainNode.connect(this.audioContext.destination);
+            // Ensure audio context is running
+            if (this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+            }
             
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(1600, this.audioContext.currentTime + 0.1);
-            
-            gainNode.gain.setValueAtTime(this.effectsVolume, this.audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
-            
-            oscillator.start(this.audioContext.currentTime);
-            oscillator.stop(this.audioContext.currentTime + 0.1);
+            try {
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1600, this.audioContext.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(this.effectsVolume * 0.5, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + 0.1);
+            } catch (e) {
+                // Ignore audio errors
+            }
         };
     }
 
