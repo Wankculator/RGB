@@ -346,14 +346,14 @@
         .stat-card {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 0, 0.1);
-            padding: 40px 20px;
+            padding: 40px 15px;
             border-radius: 20px;
             transition: var(--transition);
             text-align: center;
             backdrop-filter: blur(10px);
             opacity: 0;
             transform: translateY(30px);
-            overflow: hidden;
+            overflow: visible;
             min-height: 180px;
             display: flex;
             flex-direction: column;
@@ -374,11 +374,9 @@
             color: var(--yellow);
             font-family: 'JetBrains Mono', monospace;
             margin-bottom: 10px;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
+            white-space: nowrap;
             line-height: 1.2;
-            max-width: 100%;
-            padding: 0 10px;
+            padding: 0 5px;
         }
 
         .stat-label {
@@ -736,6 +734,21 @@
             display: none !important;
         }
         
+        /* Responsive - Extra small screens */
+        @media (max-width: 320px) {
+            .stat-number {
+                font-size: 1.4rem !important;
+            }
+            
+            .stat-card {
+                padding: 20px 10px !important;
+            }
+            
+            .stats-grid {
+                gap: 10px !important;
+            }
+        }
+        
         /* Responsive - Small phones like iPhone SE */
         @media (max-width: 375px) {
             .container {
@@ -853,7 +866,8 @@
             
             /* Stats optimization */
             .stat-number {
-                font-size: 1.8rem !important;
+                font-size: 1.6rem !important;
+                white-space: nowrap !important;
             }
             
             .stat-card {
@@ -1004,6 +1018,7 @@
             
             .stat-number {
                 font-size: 2rem !important;
+                white-space: nowrap !important;
             }
             
             .stat-label {
