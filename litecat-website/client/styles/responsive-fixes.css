@@ -1,0 +1,130 @@
+/* Responsive Technical Fixes Only - Preserves Original UI */
+
+/* Mobile Stats Fix */
+@media (max-width: 480px) {
+    .stat-number {
+        font-size: 1.8rem !important;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    .stat-card {
+        padding: 30px 10px !important;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 375px) {
+    .stat-number {
+        font-size: 1.5rem !important;
+        letter-spacing: -0.5px;
+    }
+}
+
+@media (max-width: 320px) {
+    .stat-number {
+        font-size: 1.25rem !important;
+        letter-spacing: -1px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
+    }
+    
+    .stat-card {
+        padding: 20px 8px !important;
+    }
+}
+
+/* Game Frame Responsive */
+@media (max-width: 768px) {
+    #gameWrapper {
+        height: 400px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #gameWrapper {
+        height: 350px !important;
+    }
+}
+
+/* Touch Target Fixes */
+.btn,
+.modal-content button,
+button[type="submit"],
+.purchase-controls button {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Text Overflow Prevention */
+input[type="text"],
+input[type="email"],
+.payment-info input {
+    text-overflow: ellipsis;
+}
+
+/* Modal Mobile Fixes */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95% !important;
+        max-width: none !important;
+        margin: 10px !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+    }
+    
+    #qrcode canvas {
+        max-width: 200px !important;
+        height: auto !important;
+    }
+}
+
+/* Purchase Form Mobile */
+@media (max-width: 480px) {
+    .purchase-form {
+        padding: 20px 15px !important;
+    }
+    
+    .batch-selector {
+        gap: 10px !important;
+    }
+    
+    .batch-controls button {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 1.2rem !important;
+    }
+}
+
+/* Navigation Mobile */
+@media (max-width: 768px) {
+    nav {
+        display: none;
+    }
+    
+    .mobile-menu-toggle {
+        display: block;
+        background: transparent;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+    }
+    
+    .hamburger {
+        width: 25px;
+        height: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .hamburger span {
+        display: block;
+        height: 3px;
+        background: var(--yellow);
+        transition: all 0.3s;
+    }
+}
