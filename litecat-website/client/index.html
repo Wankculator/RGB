@@ -1888,55 +1888,9 @@
             const closeModalBtn = document.getElementById('closeModal');
             const scanQRBtn = document.getElementById('scanQRBtn');
             
-            // QR Scanner functionality
-            let html5QrCode = null;
-            let isScanning = false;
+            // QR Scanner is now handled by qr-scanner.js
             
-            if (scanQRBtn) {
-                scanQRBtn.addEventListener('click', async () => {
-                    const modal = document.getElementById('qrScannerModal');
-                    modal.style.display = 'flex';
-                    
-                    // Reset to initial state
-                    document.getElementById('cameraPermissionDiv').style.display = 'block';
-                    document.getElementById('qrReaderDiv').style.display = 'none';
-                    document.getElementById('scanSuccessDiv').style.display = 'none';
-                    
-                    // Check if we can use camera
-                    try {
-                        const devices = await Html5Qrcode.getCameras();
-                        if (!devices || devices.length === 0) {
-                            throw new Error('No cameras found on this device');
-                        }
-                        
-                        // Update permission button text based on camera availability
-                        document.getElementById('startScannerBtn').textContent = 
-                            devices.length > 1 ? 'Enable Camera & Scan' : 'Start Scanner';
-                    } catch (err) {
-                        console.log('Camera detection:', err);
-                        // Still allow user to try - might just be a permission issue
-                    }
-                });
-            }
-            
-            // Start Scanner Button
-            const startScannerBtn = document.getElementById('startScannerBtn');
-            if (startScannerBtn) {
-                startScannerBtn.addEventListener('click', async () => {
-                    try {
-                        // Check if Html5Qrcode is available
-                        if (typeof Html5QrcodeScanner === 'undefined') {
-                            throw new Error('QR scanner library not loaded. Please check your internet connection.');
-                        }
-                        
-                        console.log('QR Scanner library loaded successfully');
-                        
-                        // Hide permission div, show scanner
-                        document.getElementById('cameraPermissionDiv').style.display = 'none';
-                        document.getElementById('qrReaderDiv').style.display = 'block';
-                        
-                        // Clear the container first
-                        document.getElementById('qrReaderDiv').innerHTML = '';
+            // QR Scanner button handlers are now in qr-scanner.js
                         
                         // Success callback
                         const onScanSuccess = (decodedText, decodedResult) => {
@@ -2068,138 +2022,7 @@
                 });
             }
             
-            // Manual input button
-            const manualInputBtn = document.getElementById('manualInputBtn');
-            if (manualInputBtn) {
-                manualInputBtn.addEventListener('click', () => {
-                    if (html5QrCode) {
-                        html5QrCode.clear();
-                        html5QrCode = null;
-                    }
-                    document.getElementById('qrScannerModal').style.display = 'none';
-                });
-            }
-            
-            // Close QR scanner modal
-            const closeQRScanner = document.getElementById('closeQRScanner');
-            if (closeQRScanner) {
-                closeQRScanner.addEventListener('click', () => {
-                    if (html5QrCode) {
-                        html5QrCode.clear();
-                        html5QrCode = null;
-                    }
-                    document.getElementById('qrScannerModal').style.display = 'none';
-                });
-            }
-            
-            // Close on outside click
-            document.getElementById('qrScannerModal').addEventListener('click', (e) => {
-                if (e.target.id === 'qrScannerModal') {
-                    if (html5QrCode) {
-                        html5QrCode.clear();
-                        html5QrCode = null;
-                    }
-                    document.getElementById('qrScannerModal').style.display = 'none';
-                }
-            });
-            
-            // Upload QR Image functionality
-            const uploadQRBtn = document.getElementById('uploadQRBtn');
-            const qrFileInput = document.getElementById('qrFileInput');
-            
-            if (uploadQRBtn && qrFileInput) {
-                uploadQRBtn.addEventListener('click', () => {
-                    qrFileInput.click();
-                });
-                
-                qrFileInput.addEventListener('change', async (e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        try {
-                            // Show loading state
-                            document.getElementById('cameraPermissionDiv').innerHTML = `
-                                <div style="padding: 40px;">
-                                    <div style="width: 80px; height: 80px; margin: 0 auto 20px; background: var(--yellow); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="#000" style="animation: spin 1s linear infinite;">
-                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                                        </svg>
-                                    </div>
-                                    <h3 style="color: var(--yellow); margin-bottom: 15px;">Scanning QR Code...</h3>
-                                    <p style="color: rgba(255,255,255,0.8);">
-                                        Processing uploaded image
-                                    </p>
-                                </div>
-                            `;
-                            
-                            // Initialize scanner for file
-                            const html5QrCodeFile = new Html5Qrcode("qrReaderDiv");
-                            
-                            // Scan the file
-                            const decodedText = await html5QrCodeFile.scanFile(file, true);
-                            
-                            // Check if it's a valid RGB invoice
-                            if (decodedText.startsWith('rgb:') || decodedText.includes('utxob:')) {
-                                // Success!
-                                document.getElementById('cameraPermissionDiv').style.display = 'none';
-                                document.getElementById('scanSuccessDiv').style.display = 'block';
-                                document.getElementById('scannedInvoice').textContent = decodedText;
-                                
-                                // Auto-fill the form and close modal after 2 seconds
-                                setTimeout(() => {
-                                    document.getElementById('rgbInvoice').value = decodedText;
-                                    document.getElementById('qrScannerModal').style.display = 'none';
-                                    showNotification('RGB invoice scanned successfully!', 'success');
-                                }, 2000);
-                            } else {
-                                throw new Error('Invalid QR code - not an RGB invoice');
-                            }
-                            
-                        } catch (error) {
-                            console.error('File scan error:', error);
-                            
-                            // Show error
-                            document.getElementById('cameraPermissionDiv').innerHTML = `
-                                <div style="padding: 20px;">
-                                    <div style="width: 80px; height: 80px; margin: 0 auto 20px; background: #ff5252; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="#fff">
-                                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                                        </svg>
-                                    </div>
-                                    <h3 style="color: #ff5252; margin-bottom: 15px;">Scan Failed</h3>
-                                    <p style="color: rgba(255,255,255,0.8); margin-bottom: 20px;">
-                                        ${error.message.includes('Invalid QR') 
-                                            ? 'The QR code is not a valid RGB invoice' 
-                                            : 'Could not read QR code from image'}
-                                    </p>
-                                    <div style="display: flex; gap: 10px; justify-content: center;">
-                                        <button onclick="document.getElementById('qrFileInput').click()" 
-                                                style="background: transparent; color: var(--yellow); border: 1px solid var(--yellow); padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600;">
-                                            Try Another Image
-                                        </button>
-                                        <button onclick="document.getElementById('qrScannerModal').style.display='none'" 
-                                                style="background: var(--yellow); color: #000; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600;">
-                                            Enter Manually
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                        
-                        // Reset file input
-                        qrFileInput.value = '';
-                    }
-                });
-            }
-            
-            // Add spinning animation
-            const styleEl = document.createElement('style');
-            styleEl.textContent = `
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-            `;
-            document.head.appendChild(styleEl);
+            // QR Scanner functionality is now handled by qr-scanner.js
             
             // Constants
             const PRICE_PER_BATCH_BTC = 0.00002;
@@ -2601,5 +2424,8 @@
     
     <!-- Live Updates WebSocket Integration -->
     <script src="js/websocket-integration.js"></script>
+    
+    <!-- QR Scanner Implementation -->
+    <script src="js/qr-scanner.js"></script>
 </body>
 </html>

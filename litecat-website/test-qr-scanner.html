@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Scanner Test - LIGHTCAT</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: #FFD700;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+        
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid #f44336;
+        }
+        
+        .info {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+            border: 1px solid #2196F3;
+        }
+        
+        button {
+            background: #FFD700;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #FFC700;
+        }
+        
+        .qr-preview {
+            max-width: 300px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        #generatedQR {
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 QR Scanner Test Suite</h1>
+    
+    <div class="test-section">
+        <h2>1. Library Loading Test</h2>
+        <div id="libraryStatus" class="status info">Checking QR libraries...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Generate Test QR Code</h2>
+        <p>This will generate a QR code with a sample RGB invoice for testing:</p>
+        <button onclick="generateTestQR()">Generate Test QR</button>
+        <div id="qrPreview" class="qr-preview" style="display: none;">
+            <div id="generatedQR"></div>
+            <p style="color: #000; font-size: 0.9em; margin-top: 10px;">
+                Screenshot or save this QR code to test the scanner
+            </p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Camera Permission Test</h2>
+        <button onclick="testCameraPermission()">Test Camera Access</button>
+        <div id="cameraStatus" class="status info" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Scanner Implementation Test</h2>
+        <p>Open the main page and click the SCAN button in the RGB invoice field to test the full implementation.</p>
+        <button onclick="window.open('http://localhost:8082', '_blank')">Open Main Page</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. Test Results Summary</h2>
+        <div id="testSummary" class="status info">Run tests above to see results...</div>
+    </div>
+
+    <!-- QR Code Generation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- QR Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
+    <script>
+        // Test sample RGB invoice
+        const TEST_RGB_INVOICE = "rgb:~/~/~/bc:utxob:~7gWmgoA-22I3w3R-nVaZCVi-855DAIx-GHelWrC-kak2yq4-oICD6?expiry=1753383754&endpoints=rpcs://proxy.iriswallet.com/0.2/json-rpc";
+        
+        // Check library loading
+        function checkLibraries() {
+            const status = document.getElementById('libraryStatus');
+            const results = [];
+            
+            // Check QRCode.js
+            if (typeof QRCode !== 'undefined') {
+                results.push('✅ QRCode.js loaded successfully');
+            } else {
+                results.push('❌ QRCode.js failed to load');
+            }
+            
+            // Check Html5Qrcode
+            if (typeof Html5Qrcode !== 'undefined') {
+                results.push('✅ Html5Qrcode loaded successfully');
+            } else {
+                results.push('❌ Html5Qrcode failed to load');
+            }
+            
+            if (typeof Html5QrcodeScanner !== 'undefined') {
+                results.push('✅ Html5QrcodeScanner loaded successfully');
+            } else {
+                results.push('❌ Html5QrcodeScanner failed to load');
+            }
+            
+            const allLoaded = results.every(r => r.includes('✅'));
+            status.className = 'status ' + (allLoaded ? 'success' : 'error');
+            status.innerHTML = results.join('<br>');
+            
+            updateSummary();
+        }
+        
+        // Generate test QR code
+        function generateTestQR() {
+            const preview = document.getElementById('qrPreview');
+            const container = document.getElementById('generatedQR');
+            
+            // Clear previous QR if any
+            container.innerHTML = '';
+            
+            try {
+                new QRCode(container, {
+                    text: TEST_RGB_INVOICE,
+                    width: 256,
+                    height: 256,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                preview.style.display = 'block';
+                showStatus('QR code generated successfully! Take a photo or screenshot to test.', 'success');
+            } catch (error) {
+                showStatus('Failed to generate QR code: ' + error.message, 'error');
+            }
+        }
+        
+        // Test camera permission
+        async function testCameraPermission() {
+            const status = document.getElementById('cameraStatus');
+            status.style.display = 'block';
+            status.className = 'status info';
+            status.textContent = 'Requesting camera permission...';
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                
+                // Get camera info
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameras = devices.filter(device => device.kind === 'videoinput');
+                
+                // Stop the stream
+                stream.getTracks().forEach(track => track.stop());
+                
+                status.className = 'status success';
+                status.innerHTML = `✅ Camera access granted!<br>Found ${cameras.length} camera(s):<br>` +
+                    cameras.map((cam, i) => `• ${cam.label || 'Camera ' + (i + 1)}`).join('<br>');
+                    
+            } catch (error) {
+                status.className = 'status error';
+                let message = '❌ Camera access denied: ';
+                
+                if (error.name === 'NotAllowedError') {
+                    message += 'User denied camera permission';
+                } else if (error.name === 'NotFoundError') {
+                    message += 'No camera found on this device';
+                } else if (error.name === 'NotReadableError') {
+                    message += 'Camera is being used by another application';
+                } else {
+                    message += error.message;
+                }
+                
+                status.textContent = message;
+            }
+            
+            updateSummary();
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            const summary = document.getElementById('testSummary');
+            const div = document.createElement('div');
+            div.className = 'status ' + type;
+            div.textContent = message;
+            summary.appendChild(div);
+        }
+        
+        // Update test summary
+        function updateSummary() {
+            const summary = document.getElementById('testSummary');
+            const libraryOk = document.getElementById('libraryStatus').className.includes('success');
+            const cameraStatus = document.getElementById('cameraStatus');
+            const cameraOk = cameraStatus.style.display === 'block' && cameraStatus.className.includes('success');
+            
+            if (libraryOk && (cameraStatus.style.display === 'none' || cameraOk)) {
+                summary.className = 'status success';
+                summary.innerHTML = '✅ All tests passing! QR scanner should work correctly.';
+            } else if (libraryOk && !cameraOk) {
+                summary.className = 'status error';
+                summary.innerHTML = '⚠️ Libraries loaded but camera access issue detected.';
+            } else {
+                summary.className = 'status error';
+                summary.innerHTML = '❌ Issues detected. Check individual test results above.';
+            }
+        }
+        
+        // Run initial checks
+        window.addEventListener('DOMContentLoaded', () => {
+            checkLibraries();
+        });
+    </script>
+</body>
+</html>
