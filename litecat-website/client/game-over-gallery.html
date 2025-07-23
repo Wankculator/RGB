@@ -1,0 +1,386 @@
+<!-- Professional Gallery Game Over Screen -->
+<style>
+    .game-over-gallery {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #000;
+        display: none;
+        z-index: 300;
+    }
+
+    .gallery-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .gallery-track {
+        display: flex;
+        height: 100%;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .gallery-slide {
+        min-width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    /* Slide 1: Score Display */
+    .score-slide {
+        background: radial-gradient(circle at center, rgba(255, 255, 0, 0.1), transparent);
+    }
+
+    .score-content {
+        text-align: center;
+    }
+
+    .game-over-title {
+        font-size: 1.5rem;
+        color: var(--primary-yellow);
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        margin-bottom: 30px;
+        opacity: 0;
+        animation: fadeInUp 0.6s 0.3s forwards;
+    }
+
+    .score-number {
+        font-size: 5rem;
+        color: var(--primary-yellow);
+        font-weight: bold;
+        text-shadow: 0 0 30px rgba(255, 255, 0, 0.8);
+        opacity: 0;
+        animation: scaleIn 0.6s 0.5s forwards;
+    }
+
+    .tier-result {
+        margin-top: 20px;
+        padding: 10px 30px;
+        background: rgba(255, 255, 0, 0.1);
+        border: 2px solid var(--primary-yellow);
+        border-radius: 30px;
+        display: inline-block;
+        font-size: 1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        opacity: 0;
+        animation: fadeInUp 0.6s 0.7s forwards;
+    }
+
+    /* Slide 2: Actions */
+    .actions-slide {
+        background: linear-gradient(135deg, rgba(255, 255, 0, 0.05), transparent);
+    }
+
+    .actions-content {
+        text-align: center;
+        max-width: 400px;
+        width: 100%;
+    }
+
+    .unlock-section {
+        margin-bottom: 30px;
+    }
+
+    .unlock-title {
+        font-size: 1.2rem;
+        color: var(--primary-yellow);
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .social-button {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        margin: 10px 0;
+        background: rgba(255, 255, 0, 0.1);
+        border: 2px solid var(--primary-yellow);
+        color: var(--primary-yellow);
+        text-decoration: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .social-button:hover {
+        background: var(--primary-yellow);
+        color: #000;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(255, 255, 0, 0.4);
+    }
+
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 30px;
+    }
+
+    .action-btn {
+        padding: 15px;
+        background: transparent;
+        border: 2px solid var(--primary-yellow);
+        color: var(--primary-yellow);
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-transform: uppercase;
+    }
+
+    .action-btn.primary {
+        background: var(--primary-yellow);
+        color: #000;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 20px rgba(255, 255, 0, 0.4);
+    }
+
+    .tier-benefits {
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(255, 255, 0, 0.05);
+        border: 1px solid rgba(255, 255, 0, 0.3);
+        border-radius: 10px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    /* Navigation */
+    .gallery-nav {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 10;
+    }
+
+    .nav-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(255, 255, 0, 0.3);
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .nav-dot.active {
+        background: var(--primary-yellow);
+        width: 30px;
+        border-radius: 5px;
+    }
+
+    /* Swipe hint */
+    .swipe-hint {
+        position: absolute;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: rgba(255, 255, 0, 0.6);
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        animation: swipeHint 2s infinite;
+    }
+
+    @keyframes swipeHint {
+        0%, 100% { transform: translateX(-50%) translateX(0); }
+        50% { transform: translateX(-50%) translateX(10px); }
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+    }
+
+    @keyframes scaleIn {
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+        from {
+            opacity: 0;
+            transform: scale(0.5);
+        }
+    }
+
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+        .score-number {
+            font-size: 4rem;
+        }
+        
+        .game-over-title {
+            font-size: 1.2rem;
+        }
+        
+        .action-buttons {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div id="game-over" class="game-over-gallery">
+    <div class="gallery-container">
+        <div class="gallery-track" id="gallery-track">
+            <!-- Slide 1: Score -->
+            <div class="gallery-slide score-slide">
+                <div class="score-content">
+                    <h2 class="game-over-title">Thank You for Playing!</h2>
+                    <div class="score-number" id="final-score">0</div>
+                    <div class="tier-result" id="tier-unlocked">NO TIER UNLOCKED</div>
+                    <div class="swipe-hint">
+                        <span>Swipe for rewards</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: Actions -->
+            <div class="gallery-slide actions-slide">
+                <div class="actions-content">
+                    <div id="twitter-verify" class="unlock-section">
+                        <h3 class="unlock-title">Unlock Your Rewards</h3>
+                        <a href="https://x.com/intent/follow?screen_name=RGBLightCat" 
+                           class="social-button" 
+                           id="twitter-follow" 
+                           target="_blank">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                            Follow @RGBLightCat
+                        </a>
+                        <button class="social-button" id="verify-follow">
+                            Verify Follow
+                        </button>
+                        <div id="verify-success" style="display: none; color: #4CAF50; margin-top: 10px; font-weight: 600;">
+                            ✓ Verified! You can now claim your allocation.
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="action-btn" id="play-again">Play Again</button>
+                        <button class="action-btn primary" id="unlock-tier" style="display: none;">Claim Tokens</button>
+                    </div>
+
+                    <div id="allocation-message" class="tier-benefits" style="display: none;">
+                        <!-- Dynamic benefits message -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation dots -->
+        <div class="gallery-nav">
+            <button class="nav-dot active" data-slide="0"></button>
+            <button class="nav-dot" data-slide="1"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Gallery functionality
+    let currentSlide = 0;
+    const track = document.getElementById('gallery-track');
+    const dots = document.querySelectorAll('.nav-dot');
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    function goToSlide(index) {
+        currentSlide = index;
+        track.style.transform = `translateX(-${index * 100}%)`;
+        
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === index);
+        });
+    }
+
+    // Touch swipe support
+    const gallery = document.querySelector('.gallery-container');
+    
+    gallery.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+
+    gallery.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+
+    function handleSwipe() {
+        if (touchEndX < touchStartX - 50 && currentSlide < 1) {
+            goToSlide(1);
+        }
+        if (touchEndX > touchStartX + 50 && currentSlide > 0) {
+            goToSlide(0);
+        }
+    }
+
+    // Mouse swipe support
+    let mouseDown = false;
+    let startX = 0;
+
+    gallery.addEventListener('mousedown', (e) => {
+        mouseDown = true;
+        startX = e.pageX;
+    });
+
+    gallery.addEventListener('mouseup', (e) => {
+        if (!mouseDown) return;
+        mouseDown = false;
+        
+        const endX = e.pageX;
+        if (endX < startX - 50 && currentSlide < 1) {
+            goToSlide(1);
+        }
+        if (endX > startX + 50 && currentSlide > 0) {
+            goToSlide(0);
+        }
+    });
+
+    // Dot navigation
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => goToSlide(index));
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (document.getElementById('game-over').style.display !== 'none') {
+            if (e.key === 'ArrowRight' && currentSlide < 1) goToSlide(1);
+            if (e.key === 'ArrowLeft' && currentSlide > 0) goToSlide(0);
+        }
+    });
+</script>

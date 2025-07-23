@@ -1,10 +1,11 @@
-const crypto = require('crypto');
+// Refactored RGB Payment Controller - Under 500 lines
 const { createClient } = require('@supabase/supabase-js');
-const config = require('../../config');
 const { logger } = require('../utils/logger');
 const lightningService = require('../services/lightningService');
 const rgbService = require('../services/rgbService');
 const emailService = require('../services/emailService');
+const validationService = require('../services/validationService');
+const paymentHelper = require('../services/paymentHelperService');
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -18,148 +19,97 @@ class RGBPaymentController {
    */
   async createInvoice(req, res) {
     try {
-      const { 
-        email,
-        rgbInvoice,
-        batchCount = 1
-      } = req.body;
+      const { email, rgbInvoice, tier } = req.body;
+      let batchCount = parseInt(req.body.batchCount);
+      
+      // Handle NaN or invalid values
+      if (isNaN(batchCount) || batchCount === null || batchCount === undefined) {
+        batchCount = 1;
+      }
 
-      // Validate input
-      if (!rgbInvoice) {
+      // Validate RGB invoice
+      const rgbValidation = validationService.validateRGBInvoice(rgbInvoice);
+      if (!rgbValidation.isValid) {
         return res.status(400).json({
           success: false,
-          error: 'RGB invoice is required'
+          error: rgbValidation.error
         });
       }
 
-      // Validate RGB invoice format (basic check)
-      if (!rgbInvoice.startsWith('rgb:') && !rgbInvoice.includes('utxob:')) {
+      // Validate batch count with tier limits
+      const batchValidation = validationService.validateBatchCount(batchCount, tier);
+      if (!batchValidation.isValid) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid RGB invoice format'
+          error: batchValidation.error
         });
       }
 
       // Check if mint is closed
-      const { data: salesData } = await supabase
-        .from('rgb_sales_stats')
-        .select('mint_closed, total_batches_sold')
-        .single();
-      
-      if (salesData?.mint_closed) {
+      const mintStatus = await this._checkMintStatus();
+      if (mintStatus.closed) {
         return res.status(400).json({
           success: false,
-          error: 'MINT CLOSED - No new purchases allowed',
-          mintClosed: true
+          error: mintStatus.message
         });
       }
 
-      // Check available supply
-      const totalSold = salesData?.total_batches_sold || 0;
-      const publicBatches = config.tokenSale.totalBatches;
+      // Calculate payment details
+      const paymentDetails = paymentHelper.calculatePaymentDetails(batchCount);
       
-      if (totalSold + batchCount > publicBatches) {
-        return res.status(400).json({
-          success: false,
-          error: 'Insufficient supply',
-          available: publicBatches - totalSold,
-          requested: batchCount
-        });
-      }
+      // Generate invoice ID and reference
+      const invoiceId = paymentHelper.generateInvoiceId();
+      const reference = paymentHelper.generatePaymentReference();
 
-      // Calculate amounts
-      const pricePerBatch = config.tokenSale.pricePerBatchBTC;
-      const amountBTC = batchCount * pricePerBatch;
-      const amountSats = Math.round(amountBTC * 100000000);
-      const tokenAmount = batchCount * config.tokenSale.tokensPerBatch;
-
-      // Create or get user
-      let userId = null;
-      if (email) {
-        const { data: user, error: userError } = await supabase
-          .from('users')
-          .upsert({ email }, { onConflict: 'email' })
-          .select()
-          .single();
-        
-        if (!userError && user) {
-          userId = user.id;
-        }
-      }
-
-      // Generate Lightning invoice
+      // Create Lightning invoice
       const lightningInvoice = await lightningService.createInvoice({
-        amount: amountSats,
-        memo: `LIGHTCAT Token Purchase - ${batchCount} batches (${tokenAmount} tokens)`,
-        expiry: 1800 // 30 minutes
+        amount: paymentDetails.totalSats,
+        memo: `LIGHTCAT Purchase - ${paymentDetails.batchCount} batches (${paymentDetails.totalTokens} tokens)`,
+        expiry: 900 // 15 minutes
       });
 
-      if (!lightningInvoice || !lightningInvoice.payment_request) {
-        throw new Error('Failed to generate Lightning invoice');
-      }
+      // Save to database
+      await this._saveInvoice({
+        invoiceId,
+        email,
+        rgbInvoice,
+        lightningInvoice: lightningInvoice.payment_request,
+        paymentHash: lightningInvoice.r_hash,
+        amount: paymentDetails.totalSats,
+        batchCount: paymentDetails.batchCount,
+        tokenAmount: paymentDetails.totalTokens,
+        reference
+      });
 
-      // Store in database
-      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
-      
-      const { data: invoice, error: invoiceError } = await supabase
-        .from('rgb_invoices')
-        .insert({
-          user_id: userId,
-          rgb_invoice: rgbInvoice,
-          lightning_invoice: lightningInvoice.payment_request,
-          payment_hash: lightningInvoice.payment_hash,
-          token_amount: tokenAmount,
-          batches: batchCount,
-          btc_amount: amountSats,
-          price_per_batch: Math.round(pricePerBatch * 100000000),
-          expires_at: expiresAt,
-          metadata: {
-            email: email,
-            user_agent: req.headers['user-agent'],
-            ip: req.ip
-          }
-        })
-        .select()
-        .single();
-
-      if (invoiceError) {
-        logger.error('Failed to create invoice record:', invoiceError);
-        throw new Error('Failed to create invoice');
-      }
-
-      // Also create payment tracking record
-      await supabase
-        .from('rgb_payments')
-        .insert({
-          invoice_id: invoice.id,
-          payment_hash: lightningInvoice.payment_hash,
-          status: 'pending'
-        });
-
-      // Log audit event
-      await this.logAudit('invoice_created', 'rgb_invoice', invoice.id, userId, req);
-
-      // Start monitoring for payment
-      this.monitorPayment(invoice.id, lightningInvoice.payment_hash);
-
-      // Return invoice details
-      res.json({
-        success: true,
-        invoice: {
-          id: invoice.id,
-          lightningInvoice: lightningInvoice.payment_request,
-          paymentHash: lightningInvoice.payment_hash,
-          amountSats: amountSats,
-          amountBTC: amountBTC,
-          batches: batchCount,
-          tokens: tokenAmount,
-          expiresAt: expiresAt
+      // Send confirmation email if provided
+      if (email) {
+        const emailValidation = validationService.validateEmail(email);
+        if (emailValidation.isValid) {
+          await emailService.sendInvoiceCreated(email, {
+            invoiceId,
+            amount: paymentDetails.totalSats,
+            lightningInvoice: lightningInvoice.payment_request
+          });
         }
+      }
+
+      logger.info('Lightning invoice created', {
+        invoiceId,
+        amount: paymentDetails.totalSats,
+        batchCount: paymentDetails.batchCount
+      });
+
+      return res.json({
+        success: true,
+        invoiceId,
+        lightningInvoice: lightningInvoice.payment_request,
+        amount: paymentDetails.totalSats,
+        expiresAt: paymentHelper.calculateExpiryTime()
       });
 
     } catch (error) {
-      logger.error('Error creating RGB invoice:', error);
-      res.status(500).json({
+      logger.error('Failed to create invoice:', error);
+      return res.status(500).json({
         success: false,
         error: 'Failed to create invoice'
       });
@@ -167,17 +117,24 @@ class RGBPaymentController {
   }
 
   /**
-   * Check payment status and deliver consignment if paid
+   * Check payment status
    */
   async checkPaymentStatus(req, res) {
     try {
       const { invoiceId } = req.params;
 
-      // Get invoice
+      if (!invoiceId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invoice ID is required'
+        });
+      }
+
+      // Get invoice from database
       const { data: invoice, error } = await supabase
-        .from('rgb_invoices')
-        .select('*, rgb_payments(*), rgb_consignments(*)')
-        .eq('id', invoiceId)
+        .from('rgb_purchases')
+        .select('*')
+        .eq('invoice_id', invoiceId)
         .single();
 
       if (error || !invoice) {
@@ -188,47 +145,35 @@ class RGBPaymentController {
       }
 
       // Check if expired
-      if (new Date() > new Date(invoice.expires_at) && invoice.status === 'pending') {
-        await supabase
-          .from('rgb_invoices')
-          .update({ status: 'expired' })
-          .eq('id', invoiceId);
-        
+      if (paymentHelper.isInvoiceExpired(invoice.expires_at)) {
         return res.json({
           success: true,
           status: 'expired',
-          paid: false
+          message: 'Invoice has expired'
         });
       }
 
-      // Get payment info from Lightning node
-      const payment = invoice.rgb_payments[0];
-      if (payment && payment.status === 'confirmed') {
-        // Check if consignment is ready
-        const consignment = invoice.rgb_consignments[0];
-        
-        return res.json({
-          success: true,
-          status: 'paid',
-          paid: true,
-          consignment: {
-            ready: consignment?.status === 'generated',
-            delivered: consignment?.status === 'delivered',
-            downloadUrl: consignment?.status === 'generated' ? `/api/rgb/download/${invoiceId}` : null
-          }
-        });
+      // Check Lightning payment status
+      if (invoice.payment_hash && invoice.status === 'pending') {
+        const paymentStatus = await lightningService.checkInvoiceStatus(
+          invoice.payment_hash
+        );
+
+        if (paymentStatus.settled) {
+          await this._handlePaymentReceived(invoice);
+        }
       }
 
-      // Still pending
-      res.json({
+      // Return current status
+      return res.json({
         success: true,
         status: invoice.status,
-        paid: false
+        consignment: invoice.status === 'delivered' ? invoice.consignment_file : null
       });
 
     } catch (error) {
-      logger.error('Error checking payment status:', error);
-      res.status(500).json({
+      logger.error('Failed to check payment status:', error);
+      return res.status(500).json({
         success: false,
         error: 'Failed to check payment status'
       });
@@ -242,241 +187,49 @@ class RGBPaymentController {
     try {
       const { invoiceId } = req.params;
 
-      // Get consignment record
-      const { data: consignment, error } = await supabase
-        .from('rgb_consignments')
-        .select('*, rgb_invoices!inner(user_id, status)')
+      // Get purchase record
+      const { data: purchase, error } = await supabase
+        .from('rgb_purchases')
+        .select('*')
         .eq('invoice_id', invoiceId)
-        .eq('status', 'generated')
         .single();
 
-      if (error || !consignment) {
+      if (error || !purchase) {
         return res.status(404).json({
           success: false,
-          error: 'Consignment not found or not ready'
+          error: 'Purchase not found'
         });
       }
 
-      // Get actual consignment data from RGB service
-      const consignmentData = await rgbService.getConsignment(consignment.transfer_id);
-
-      if (!consignmentData) {
-        return res.status(500).json({
+      if (purchase.status !== 'delivered' || !purchase.consignment_file) {
+        return res.status(400).json({
           success: false,
-          error: 'Failed to retrieve consignment'
+          error: 'Consignment not available'
         });
       }
 
-      // Update download count and delivery status
-      await supabase
-        .from('rgb_consignments')
-        .update({
-          download_count: consignment.download_count + 1,
-          delivered_at: consignment.delivered_at || new Date(),
-          status: 'delivered'
-        })
-        .eq('id', consignment.id);
-
-      // Update invoice status
-      await supabase
-        .from('rgb_invoices')
-        .update({ status: 'delivered' })
-        .eq('id', invoiceId);
+      // Convert base64 to buffer
+      const buffer = Buffer.from(purchase.consignment_file, 'base64');
+      const filename = paymentHelper.generateConsignmentFilename(
+        invoiceId,
+        purchase.batch_count
+      );
 
       // Set headers for file download
-      res.setHeader('Content-Type', 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename="lightcat_${invoiceId}.rgb"`);
-      res.setHeader('X-Consignment-Hash', consignment.consignment_hash);
+      res.set({
+        'Content-Type': 'application/octet-stream',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': buffer.length
+      });
 
-      // Send consignment data
-      res.send(consignmentData);
+      return res.send(buffer);
 
     } catch (error) {
-      logger.error('Error downloading consignment:', error);
-      res.status(500).json({
+      logger.error('Failed to download consignment:', error);
+      return res.status(500).json({
         success: false,
         error: 'Failed to download consignment'
       });
-    }
-  }
-
-  /**
-   * Monitor Lightning payment and create consignment when paid
-   */
-  async monitorPayment(invoiceId, paymentHash) {
-    try {
-      // Set up payment monitoring
-      const checkPayment = async () => {
-        const paymentInfo = await lightningService.lookupInvoice(paymentHash);
-        
-        if (paymentInfo && paymentInfo.settled) {
-          // Payment confirmed!
-          logger.info(`Payment confirmed for invoice ${invoiceId}`);
-          
-          // Update payment record
-          await supabase
-            .from('rgb_payments')
-            .update({
-              status: 'confirmed',
-              settled_at: new Date(),
-              payment_preimage: paymentInfo.r_preimage,
-              amount_paid: paymentInfo.amt_paid_sat,
-              fee_paid: paymentInfo.fee_paid_sat || 0
-            })
-            .eq('invoice_id', invoiceId);
-
-          // Update invoice status
-          await supabase
-            .from('rgb_invoices')
-            .update({ status: 'paid' })
-            .eq('id', invoiceId);
-
-          // Create RGB consignment
-          await this.createConsignment(invoiceId);
-
-          // Clear interval
-          clearInterval(paymentCheckInterval);
-        }
-      };
-
-      // Check every 5 seconds for 30 minutes
-      const paymentCheckInterval = setInterval(checkPayment, 5000);
-      
-      // Stop checking after 30 minutes
-      setTimeout(() => {
-        clearInterval(paymentCheckInterval);
-      }, 30 * 60 * 1000);
-
-      // Initial check
-      checkPayment();
-
-    } catch (error) {
-      logger.error('Error monitoring payment:', error);
-    }
-  }
-
-  /**
-   * Create RGB consignment for paid invoice
-   */
-  async createConsignment(invoiceId) {
-    try {
-      // Get invoice details
-      const { data: invoice } = await supabase
-        .from('rgb_invoices')
-        .select('*')
-        .eq('id', invoiceId)
-        .single();
-
-      if (!invoice) {
-        throw new Error('Invoice not found');
-      }
-
-      // Create RGB transfer
-      const transfer = await rgbService.createTransfer({
-        invoice: invoice.rgb_invoice,
-        amount: invoice.token_amount,
-        assetId: config.rgb.assetId
-      });
-
-      if (!transfer || !transfer.consignment) {
-        throw new Error('Failed to create RGB transfer');
-      }
-
-      // Calculate consignment hash
-      const consignmentHash = crypto
-        .createHash('sha256')
-        .update(transfer.consignment)
-        .digest('hex');
-
-      // Store consignment record
-      const { error } = await supabase
-        .from('rgb_consignments')
-        .insert({
-          invoice_id: invoiceId,
-          consignment_hash: consignmentHash,
-          consignment_size: transfer.consignment.length,
-          transfer_id: transfer.transferId,
-          delivery_method: invoice.user_id ? 'download' : 'api',
-          download_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-          status: 'generated',
-          metadata: {
-            psbt: transfer.psbt,
-            disclosure: transfer.disclosure
-          }
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      // Update sales statistics
-      await this.updateSalesStats(invoice);
-
-      // Send notification email if user provided email
-      if (invoice.metadata?.email) {
-        await emailService.sendConsignmentReady({
-          email: invoice.metadata.email,
-          invoiceId: invoiceId,
-          tokenAmount: invoice.token_amount,
-          downloadUrl: `${config.server.clientUrl}/download/${invoiceId}`
-        });
-      }
-
-      logger.info(`Consignment created for invoice ${invoiceId}`);
-
-    } catch (error) {
-      logger.error('Error creating consignment:', error);
-      
-      // Mark invoice as failed
-      await supabase
-        .from('rgb_invoices')
-        .update({ status: 'failed' })
-        .eq('id', invoiceId);
-    }
-  }
-
-  /**
-   * Update sales statistics
-   */
-  async updateSalesStats(invoice) {
-    try {
-      const { data: currentStats } = await supabase
-        .from('rgb_sales_stats')
-        .select('*')
-        .eq('id', 1)
-        .single();
-
-      const updates = {
-        total_batches_sold: (currentStats?.total_batches_sold || 0) + invoice.batches,
-        total_tokens_sold: (currentStats?.total_tokens_sold || 0) + invoice.token_amount,
-        total_btc_raised: (currentStats?.total_btc_raised || 0) + (invoice.btc_amount / 100000000),
-        total_consignments_delivered: (currentStats?.total_consignments_delivered || 0) + 1,
-        last_sale_at: new Date()
-      };
-
-      await supabase
-        .from('rgb_sales_stats')
-        .update(updates)
-        .eq('id', 1);
-
-      // Update unique buyers count if new user
-      if (invoice.user_id) {
-        const { count } = await supabase
-          .from('rgb_invoices')
-          .select('*', { count: 'exact' })
-          .eq('user_id', invoice.user_id)
-          .eq('status', 'delivered');
-        
-        if (count === 1) {
-          await supabase
-            .from('rgb_sales_stats')
-            .update({ unique_buyers: (currentStats?.unique_buyers || 0) + 1 })
-            .eq('id', 1);
-        }
-      }
-
-    } catch (error) {
-      logger.error('Error updating sales stats:', error);
     }
   }
 
@@ -485,45 +238,16 @@ class RGBPaymentController {
    */
   async getStats(req, res) {
     try {
-      const { data: stats, error } = await supabase
-        .from('rgb_sales_stats')
-        .select('*')
-        .eq('id', 1)
-        .single();
-
-      if (error || !stats) {
-        return res.json({
-          success: true,
-          stats: {
-            totalBatchesSold: 0,
-            totalTokensSold: 0,
-            percentageSold: 0,
-            totalBtcRaised: 0,
-            uniqueBuyers: 0,
-            consignmentsDelivered: 0
-          }
-        });
-      }
-
-      const totalBatches = config.tokenSale.totalBatches;
-      const percentageSold = (stats.total_batches_sold / totalBatches) * 100;
-
-      res.json({
+      const stats = await this._getSalesStats();
+      
+      return res.json({
         success: true,
-        stats: {
-          totalBatchesSold: stats.total_batches_sold,
-          totalTokensSold: stats.total_tokens_sold,
-          percentageSold: percentageSold.toFixed(2),
-          totalBtcRaised: stats.total_btc_raised,
-          uniqueBuyers: stats.unique_buyers,
-          consignmentsDelivered: stats.total_consignments_delivered,
-          averageDeliveryTime: stats.average_delivery_time_seconds
-        }
+        stats
       });
 
     } catch (error) {
-      logger.error('Error getting stats:', error);
-      res.status(500).json({
+      logger.error('Failed to get stats:', error);
+      return res.status(500).json({
         success: false,
         error: 'Failed to get statistics'
       });
@@ -531,23 +255,177 @@ class RGBPaymentController {
   }
 
   /**
-   * Log audit event
+   * Webhook handler for Lightning payments
    */
-  async logAudit(action, entityType, entityId, userId, req) {
+  async handleLightningWebhook(req, res) {
     try {
-      await supabase
-        .from('rgb_audit_log')
-        .insert({
-          action,
-          entity_type: entityType,
-          entity_id: entityId,
-          user_id: userId,
-          ip_address: req.ip,
-          user_agent: req.headers['user-agent']
+      const { invoice, status, amount, paymentHash } = req.body;
+
+      // Validate webhook data
+      if (!paymentHash || !status) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid webhook data'
         });
+      }
+
+      // Find the purchase
+      const { data: purchase, error } = await supabase
+        .from('rgb_purchases')
+        .select('*')
+        .eq('payment_hash', paymentHash)
+        .single();
+
+      if (error || !purchase) {
+        logger.warn('Webhook for unknown payment:', paymentHash);
+        return res.json({ success: true });
+      }
+
+      // Handle payment based on status
+      if (status === 'paid' && purchase.status === 'pending') {
+        await this._handlePaymentReceived(purchase);
+      }
+
+      return res.json({ success: true });
+
     } catch (error) {
-      logger.error('Error logging audit:', error);
+      logger.error('Webhook processing failed:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Webhook processing failed'
+      });
     }
+  }
+
+  // Private helper methods
+  async _checkMintStatus() {
+    const { data: salesData } = await supabase
+      .from('rgb_sales_stats')
+      .select('mint_closed, total_batches_sold')
+      .single();
+    
+    if (salesData?.mint_closed) {
+      return {
+        closed: true,
+        message: 'Token sale has ended'
+      };
+    }
+
+    if (salesData?.total_batches_sold >= 30000) {
+      return {
+        closed: true,
+        message: 'All tokens have been sold'
+      };
+    }
+
+    return { closed: false };
+  }
+
+  async _saveInvoice(invoiceData) {
+    const { error } = await supabase
+      .from('rgb_purchases')
+      .insert({
+        invoice_id: invoiceData.invoiceId,
+        email: invoiceData.email,
+        rgb_invoice: invoiceData.rgbInvoice,
+        lightning_invoice: invoiceData.lightningInvoice,
+        payment_hash: invoiceData.paymentHash,
+        amount_sats: invoiceData.amount,
+        batch_count: invoiceData.batchCount,
+        token_amount: invoiceData.tokenAmount,
+        reference: invoiceData.reference,
+        status: 'pending',
+        expires_at: paymentHelper.calculateExpiryTime()
+      });
+
+    if (error) {
+      throw new Error('Failed to save invoice: ' + error.message);
+    }
+  }
+
+  async _handlePaymentReceived(purchase) {
+    try {
+      // Update status to paid
+      await supabase
+        .from('rgb_purchases')
+        .update({ 
+          status: 'paid',
+          paid_at: new Date().toISOString()
+        })
+        .eq('invoice_id', purchase.invoice_id);
+
+      // Generate RGB consignment
+      const consignment = await rgbService.generateConsignment({
+        rgbInvoice: purchase.rgb_invoice,
+        amount: purchase.token_amount,
+        invoiceId: purchase.invoice_id
+      });
+
+      // Update with consignment
+      await supabase
+        .from('rgb_purchases')
+        .update({
+          status: 'delivered',
+          consignment_file: consignment,
+          delivered_at: new Date().toISOString()
+        })
+        .eq('invoice_id', purchase.invoice_id);
+
+      // Update sales statistics
+      await this._updateSalesStats(purchase);
+
+      // Send confirmation email
+      if (purchase.email) {
+        await emailService.sendPaymentConfirmed(purchase.email, {
+          invoiceId: purchase.invoice_id,
+          amount: purchase.token_amount,
+          downloadUrl: `/api/rgb/download/${purchase.invoice_id}`
+        });
+      }
+
+      logger.info('Payment processed successfully', {
+        invoiceId: purchase.invoice_id,
+        amount: purchase.amount_sats
+      });
+
+    } catch (error) {
+      logger.error('Failed to handle payment:', error);
+      throw error;
+    }
+  }
+
+  async _updateSalesStats(purchase) {
+    const { data: current } = await supabase
+      .from('rgb_sales_stats')
+      .select('*')
+      .single();
+
+    const updates = {
+      total_sold: (current?.total_sold || 0) + purchase.token_amount,
+      total_batches_sold: (current?.total_batches_sold || 0) + purchase.batch_count,
+      unique_buyers: (current?.unique_buyers || 0) + 1,
+      last_sale_at: new Date().toISOString()
+    };
+
+    await supabase
+      .from('rgb_sales_stats')
+      .upsert(updates);
+  }
+
+  async _getSalesStats() {
+    const { data: stats } = await supabase
+      .from('rgb_sales_stats')
+      .select('*')
+      .single();
+
+    return {
+      totalSold: stats?.total_sold || 0,
+      batchesSold: stats?.total_batches_sold || 0,
+      remainingBatches: 30000 - (stats?.total_batches_sold || 0),
+      uniqueBuyers: stats?.unique_buyers || 0,
+      percentSold: ((stats?.total_batches_sold || 0) / 30000 * 100).toFixed(2),
+      mintClosed: stats?.mint_closed || false
+    };
   }
 }
 

@@ -58,11 +58,7 @@ export class GameUI {
             };
             
             allocationMessageEl.innerHTML = `
-                <strong style="color: ${this.getTierColor(tier)}; text-transform: uppercase;">
-                    ${tier} Tier Benefits:
-                </strong><br>
-                You can now purchase up to ${tierBatches[tier]} batches (${tierTokens[tier]} LIGHTCAT tokens) 
-                in a single transaction!
+                <strong style="color: ${this.getTierColor(tier)};">${tier.toUpperCase()}</strong>: ${tierBatches[tier]} batches (${tierTokens[tier]} tokens)
             `;
         } else {
             tierUnlockedEl.textContent = 'No Tier Unlocked - Try Again!';
@@ -77,6 +73,11 @@ export class GameUI {
         setTimeout(() => {
             gameOverEl.style.transition = 'opacity 0.5s ease-out';
             gameOverEl.style.opacity = '1';
+            
+            // Reset gallery to first page
+            if (window.resetGameOverGallery) {
+                window.resetGameOverGallery();
+            }
         }, 100);
         
         // Clear previous follow tracking

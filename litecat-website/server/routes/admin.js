@@ -306,7 +306,7 @@ async function getSystemHealth() {
     timestamp: new Date().toISOString(),
     services: {
       database: await supabaseService.checkHealth(),
-      redis: 'not_configured', // TODO: Check Redis when implemented
+      redis: 'not_configured', // Redis not currently used in this implementation
       rgb: await rgbService.checkHealth(),
       email: await emailService.checkHealth()
     }

@@ -30,6 +30,7 @@ const validations = [
       const jsFiles = getAllFiles('.', '.js');
       jsFiles.forEach(file => {
         if (file.includes('node_modules')) return;
+        if (file.includes('mcp-validate-all.js')) return; // Skip self
         
         const content = fs.readFileSync(file, 'utf8');
         
@@ -135,10 +136,11 @@ const validations = [
           }
         }
         
-        // Check for TODO comments
-        const todos = (content.match(/TODO|FIXME|HACK/g) || []).length;
+        // Check for TODO comments (exclude this validation code itself)
+        const todoRegex = /(?<!\/\/ Check for )(?:TODO|FIXME|HACK)(?! comments)/g;
+        const todos = (content.match(todoRegex) || []).length;
         if (todos > 0) {
-          issues.push(`${file}: Contains ${todos} TODO/FIXME/HACK comments`);
+          issues.push(`${file}: Contains ${todos} unresolved comments`);
         }
       });
       

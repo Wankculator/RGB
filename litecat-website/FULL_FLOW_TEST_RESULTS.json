@@ -1,0 +1,43 @@
+{
+  "timestamp": "2025-07-23T18:31:17.887Z",
+  "results": [
+    {
+      "name": "Homepage Check",
+      "passed": true
+    },
+    {
+      "name": "Game Loading",
+      "passed": true
+    },
+    {
+      "name": "Game Mechanics",
+      "passed": true
+    },
+    {
+      "name": "RGB Invoice Creation",
+      "passed": true
+    },
+    {
+      "name": "Payment Status",
+      "passed": true
+    },
+    {
+      "name": "Consignment Download",
+      "passed": true
+    },
+    {
+      "name": "Edge Cases",
+      "passed": true
+    },
+    {
+      "name": "Performance",
+      "passed": true
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0,
+    "percentage": "100.0"
+  }
+}

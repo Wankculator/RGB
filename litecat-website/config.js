@@ -1,4 +1,9 @@
-require('dotenv').config();
+// Skip dotenv if not available (for scripts)
+try {
+  require('dotenv').config();
+} catch (e) {
+  // dotenv not available, assume env vars are already set
+}
 
 const config = {
   server: {

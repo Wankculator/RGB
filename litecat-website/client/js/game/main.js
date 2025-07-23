@@ -217,13 +217,19 @@ class LightcatGame {
         localStorage.setItem('unlockedTier', tier);
         localStorage.setItem('gameScore', this.score);
         
-        // Check if we're in an iframe
-        if (window.parent !== window) {
-            // We're in an iframe, redirect the parent window
-            window.parent.location.href = '/#purchase?tier=' + tier.toLowerCase();
-        } else {
-            // We're not in an iframe (mobile direct access), redirect normally
-            window.location.href = '/#purchase?tier=' + tier.toLowerCase();
+        // Always redirect the top window to prevent nested navigation
+        try {
+            // Try to access top window
+            if (window.top && window.top !== window) {
+                // We're in an iframe, redirect the top window
+                window.top.location.href = '/#purchase?tier=' + tier.toLowerCase();
+            } else {
+                // We're not in an iframe or can't access top, redirect normally
+                window.location.href = '/#purchase?tier=' + tier.toLowerCase();
+            }
+        } catch (e) {
+            // Cross-origin restriction, open in new tab as fallback
+            window.open('/#purchase?tier=' + tier.toLowerCase(), '_blank');
         }
     }
 

@@ -21,9 +21,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     
-    <!-- Responsive Technical Fixes -->
-    <link rel="stylesheet" href="styles/responsive-fixes.css">
-    
     <style>
         :root {
             --black: #000000;
@@ -313,34 +310,9 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
             margin-top: 60px;
-        }
-        
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                gap: 15px;
-            }
-            
-            .stat-card {
-                padding: 25px 15px;
-                min-height: 140px;
-            }
-            
-            .stat-number {
-                font-size: 1.8rem;
-            }
-            
-            .tier-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            
-            #gameWrapper {
-                height: 300px !important;
-            }
         }
 
         .stat-card {
@@ -375,10 +347,8 @@
             font-family: 'JetBrains Mono', monospace;
             margin-bottom: 10px;
             word-wrap: break-word;
-            overflow-wrap: break-word;
             line-height: 1.2;
             max-width: 100%;
-            padding: 0 10px;
         }
 
         .stat-label {
@@ -2212,19 +2182,8 @@
             let isMintClosed = false; // Track if mint is closed
             
             // Check for unlocked tier from game
-            // Handle both regular URL params and hash params (e.g., #purchase?tier=gold)
-            let urlParams = new URLSearchParams(window.location.search);
-            let unlockedTier = urlParams.get('tier');
-            
-            // If not in regular params, check hash params
-            if (!unlockedTier && window.location.hash.includes('?')) {
-                const hashParams = window.location.hash.split('?')[1];
-                urlParams = new URLSearchParams(hashParams);
-                unlockedTier = urlParams.get('tier');
-            }
-            
-            // Fall back to localStorage
-            unlockedTier = unlockedTier || localStorage.getItem('unlockedTier');
+            const urlParams = new URLSearchParams(window.location.search);
+            const unlockedTier = urlParams.get('tier') || localStorage.getItem('unlockedTier');
             
             if (unlockedTier) {
                 switch(unlockedTier.toLowerCase()) {
@@ -2241,12 +2200,6 @@
                         maxBatches = 5;
                 }
                 maxBatchesEl.textContent = maxBatches;
-                
-                // Set the batch count to maximum for the tier when coming from game
-                if (urlParams.get('tier')) {
-                    currentBatches = maxBatches;
-                    updateBatchDisplay();
-                }
                 
                 // Highlight the unlocked tier
                 const tierMap = { bronze: 'tier1', silver: 'tier2', gold: 'tier3' };
@@ -2367,7 +2320,7 @@
                 
                 try {
                     // Create invoice via API
-                    const response = await fetch('http://localhost:3000/api/rgb/invoice', {
+                    const response = await fetch('/api/rgb/invoice', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -2415,7 +2368,7 @@
                     checkCount++;
                     
                     try {
-                        const response = await fetch(`http://localhost:3000/api/rgb/invoice/${invoiceId}/status`);
+                        const response = await fetch(`/api/rgb/invoice/${invoiceId}/status`);
                         
                         if (!response.ok) {
                             throw new Error('Verification failed');
@@ -2475,7 +2428,7 @@
             // Download consignment
             function downloadConsignment() {
                 if (window.currentInvoiceId) {
-                    window.location.href = `http://localhost:3000/api/rgb/download/${window.currentInvoiceId}`;
+                    window.location.href = `/api/rgb/download/${window.currentInvoiceId}`;
                 }
             }
             
@@ -2515,7 +2468,7 @@
             // Update mint stats from API
             async function updateMintStats() {
                 try {
-                    const response = await fetch('http://localhost:3000/api/rgb/stats');
+                    const response = await fetch('/api/rgb/stats');
                     if (!response.ok) {
                         throw new Error('Failed to fetch stats');
                     }
@@ -2598,8 +2551,5 @@
             setInterval(updateMintStats, 5000); // Update every 5 seconds for real-time data
         });
     </script>
-    
-    <!-- Live Updates WebSocket Integration -->
-    <script src="js/websocket-integration.js"></script>
 </body>
 </html>
