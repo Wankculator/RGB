@@ -374,12 +374,13 @@ class RGBPaymentController {
       // Update sales statistics
       await this._updateSalesStats(purchase);
 
-      // Send confirmation email
+      // Send confirmation email with consignment attachment
       if (purchase.email) {
         await emailService.sendPaymentConfirmed(purchase.email, {
           invoiceId: purchase.invoice_id,
           amount: purchase.token_amount,
-          downloadUrl: `/api/rgb/download/${purchase.invoice_id}`
+          downloadUrl: `/api/rgb/download/${purchase.invoice_id}`,
+          consignment: consignment
         });
       }
 

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lightning Invoice - LIGHTCAT Purchase</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #000;
+      color: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background: #000;
+      padding: 30px;
+      text-align: center;
+      border-bottom: 3px solid #FFFF00;
+    }
+    .logo {
+      width: 120px;
+      height: auto;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .footer {
+      background: #111;
+      padding: 20px;
+      text-align: center;
+      font-size: 14px;
+      color: #999;
+    }
+    a {
+      color: #FFFF00;
+      text-decoration: none;
+    }
+    .highlight {
+      color: #FFFF00;
+      font-weight: bold;
+    }
+    .info-box {
+      background: #1a1a1a;
+      border: 2px solid #FFFF00;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    td {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 0, 0.2);
+    }
+    .label {
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .value {
+      color: #FFFF00;
+      font-weight: bold;
+      font-family: monospace;
+      text-align: right;
+    }
+    .warning-box {
+      background: rgba(255, 0, 0, 0.1);
+      border: 1px solid #FF5252;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    .invoice-box {
+      background: #1a1a1a;
+      border: 2px solid #FFFF00;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+      word-break: break-all;
+    }
+    .timer {
+      color: #FF5252;
+      font-weight: bold;
+      font-size: 18px;
+      text-align: center;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="{{logoUrl}}" alt="{{appName}}" class="logo">
+      <h1 style="color: #FFFF00; margin: 20px 0 0;">{{appName}}</h1>
+    </div>
+    <div class="content">
+      <h2 style="color: #FFFF00; text-align: center;">⚡ Lightning Invoice Created</h2>
+      
+      <p>Your LIGHTCAT token purchase invoice has been created. Please complete the payment within 30 minutes.</p>
+      
+      <div class="info-box">
+        <h3 style="color: #FFFF00; margin-bottom: 15px;">Purchase Details</h3>
+        <table>
+          <tr>
+            <td class="label">Invoice ID</td>
+            <td class="value">{{invoiceId}}</td>
+          </tr>
+          <tr>
+            <td class="label">Batches</td>
+            <td class="value">{{batches}}</td>
+          </tr>
+          <tr>
+            <td class="label">Token Amount</td>
+            <td class="value">{{tokens}} LIGHTCAT</td>
+          </tr>
+          <tr>
+            <td class="label">Amount Due</td>
+            <td class="value">{{amountBTC}} BTC<br><small>({{amountSats}} sats)</small></td>
+          </tr>
+          <tr style="border-bottom: none;">
+            <td class="label">Expires At</td>
+            <td class="value" style="color: #FF5252;">{{expiresAt}}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="timer">
+        ⏰ This invoice expires in 30 minutes
+      </div>
+      
+      <div class="invoice-box">
+        <h3 style="color: #FFFF00; margin-bottom: 15px;">Lightning Invoice</h3>
+        <p style="font-family: monospace; font-size: 12px; line-height: 1.5; color: #FFFF00;">
+          {{lightningInvoice}}
+        </p>
+      </div>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <p style="color: rgba(255, 255, 255, 0.7);">
+          Copy the Lightning invoice above and pay using your Lightning wallet
+        </p>
+      </div>
+      
+      <div class="warning-box">
+        <strong>Important:</strong>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+          <li>Payment must be completed within 30 minutes</li>
+          <li>Once paid, your RGB consignment will be generated automatically</li>
+          <li>You will receive an email when your tokens are ready</li>
+          <li>NO REFUNDS - All sales are final</li>
+        </ul>
+      </div>
+
+      <div style="background: rgba(255, 255, 0, 0.1); border: 1px solid #FFFF00; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <strong>How to Pay:</strong>
+        <ol style="margin: 10px 0; padding-left: 20px; line-height: 1.8;">
+          <li>Open your Lightning wallet</li>
+          <li>Select "Send" or "Pay Invoice"</li>
+          <li>Paste the invoice above</li>
+          <li>Confirm and send payment</li>
+        </ol>
+      </div>
+    </div>
+    <div class="footer">
+      <p>&copy; {{year}} {{appName}}. All rights reserved.</p>
+      <p>
+        <a href="{{appUrl}}">Visit Website</a> | 
+        <a href="mailto:{{supportEmail}}">Contact Support</a> | 
+        <a href="{{unsubscribeUrl}}">Unsubscribe</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

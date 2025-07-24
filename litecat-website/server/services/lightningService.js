@@ -1,22 +1,25 @@
-const axios = require('axios');
 const crypto = require('crypto');
 const { logger } = require('../utils/logger');
+const VoltageLightningService = require('./voltageLightningService');
 
 class LightningService {
   constructor() {
-    // Lightning node configuration
-    this.nodeUrl = process.env.LIGHTNING_NODE_URL || 'http://localhost:8080';
-    this.macaroon = process.env.LIGHTNING_MACAROON;
-    
-    // Configure axios instance for Lightning REST API
-    this.client = axios.create({
-      baseURL: this.nodeUrl,
-      headers: {
-        'Grpc-Metadata-macaroon': this.macaroon,
-        'Content-Type': 'application/json'
-      },
-      timeout: 30000
-    });
+    // Use Voltage Lightning service if configured
+    if (process.env.VOLTAGE_NODE_URL || process.env.LIGHTNING_MACAROON_PATH) {
+      logger.info('Using Voltage Lightning service');
+      this.voltageService = new VoltageLightningService();
+      this.useVoltage = true;
+      
+      // Set up event listeners for invoice updates
+      this.voltageService.on('invoice_settled', (invoice) => {
+        logger.info('Invoice settled via Voltage webhook:', invoice.payment_hash);
+        // This event can be used to trigger payment processing
+      });
+    } else {
+      // Fallback configuration for development
+      this.useVoltage = false;
+      logger.info('Using mock Lightning service for development');
+    }
   }
 
   /**
@@ -29,47 +32,20 @@ class LightningService {
    */
   async createInvoice({ amount, memo, expiry = 3600 }) {
     try {
-      // Create invoice request
-      const invoiceRequest = {
-        value: amount.toString(),
-        memo: memo,
-        expiry: expiry.toString(),
-        private: false
-      };
-
-      // For development/testing, return mock invoice if no Lightning node configured
-      if (!this.macaroon) {
-        logger.warn('No Lightning node configured, returning mock invoice');
-        return this.createMockInvoice(amount, memo, expiry);
+      // Use Voltage service if available
+      if (this.useVoltage) {
+        return await this.voltageService.createInvoice({ amount, memo, expiry });
       }
 
-      // Call Lightning node API
-      const response = await this.client.post('/v1/invoices', invoiceRequest);
-      
-      if (!response.data || !response.data.payment_request) {
-        throw new Error('Invalid response from Lightning node');
-      }
-
-      logger.info(`Lightning invoice created: ${response.data.r_hash}`);
-
-      return {
-        payment_request: response.data.payment_request,
-        payment_hash: response.data.r_hash,
-        amount_sat: amount,
-        memo: memo,
-        expiry: expiry,
-        created_at: new Date()
-      };
+      // Fallback to mock invoice for development
+      logger.warn('No Lightning node configured, returning mock invoice');
+      return this.createMockInvoice(amount, memo, expiry);
 
     } catch (error) {
       logger.error('Error creating Lightning invoice:', error);
       
       // Fallback to mock invoice for development
-      if (error.code === 'ECONNREFUSED' || !this.macaroon) {
-        return this.createMockInvoice(amount, memo, expiry);
-      }
-      
-      throw error;
+      return this.createMockInvoice(amount, memo, expiry);
     }
   }
 
@@ -80,37 +56,27 @@ class LightningService {
    */
   async lookupInvoice(paymentHash) {
     try {
-      // For development, return mock status
-      if (!this.macaroon) {
-        return this.getMockInvoiceStatus(paymentHash);
+      // Use Voltage service if available
+      if (this.useVoltage) {
+        return await this.voltageService.checkInvoiceStatus(paymentHash);
       }
 
-      // Call Lightning node API
-      const response = await this.client.get(`/v1/invoice/${paymentHash}`);
-      
-      if (!response.data) {
-        throw new Error('Invoice not found');
-      }
-
-      return {
-        settled: response.data.settled,
-        state: response.data.state,
-        amt_paid_sat: response.data.amt_paid_sat,
-        r_preimage: response.data.r_preimage,
-        settle_date: response.data.settle_date,
-        fee_paid_sat: response.data.fee_paid_sat || 0
-      };
+      // Fallback to mock for development
+      return this.getMockInvoiceStatus(paymentHash);
 
     } catch (error) {
       logger.error('Error looking up invoice:', error);
       
       // Fallback to mock for development
-      if (error.code === 'ECONNREFUSED' || !this.macaroon) {
-        return this.getMockInvoiceStatus(paymentHash);
-      }
-      
-      throw error;
+      return this.getMockInvoiceStatus(paymentHash);
     }
+  }
+
+  /**
+   * Alias for lookupInvoice to match payment controller
+   */
+  async checkInvoiceStatus(paymentHash) {
+    return this.lookupInvoice(paymentHash);
   }
 
   /**

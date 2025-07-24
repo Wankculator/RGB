@@ -572,6 +572,44 @@ class RGBService {
       throw error;
     }
   }
+
+  async generateConsignment(options) {
+    const { rgbInvoice, amount, invoiceId } = options;
+    
+    try {
+      logger.info('Generating RGB consignment:', {
+        invoiceId,
+        amount,
+        rgbInvoice: rgbInvoice.substring(0, 20) + '...'
+      });
+
+      // Create the transfer
+      const transfer = await this.createTransfer({
+        invoice: rgbInvoice,
+        amount: amount
+      });
+
+      if (!transfer.consignment) {
+        throw new Error('No consignment returned from transfer creation');
+      }
+
+      // Convert Buffer to base64 string for storage
+      const consignmentBase64 = Buffer.isBuffer(transfer.consignment) 
+        ? transfer.consignment.toString('base64')
+        : Buffer.from(transfer.consignment).toString('base64');
+
+      logger.info('Consignment generated successfully:', {
+        invoiceId,
+        transferId: transfer.transferId,
+        consignmentSize: consignmentBase64.length
+      });
+
+      return consignmentBase64;
+    } catch (error) {
+      logger.error('Failed to generate consignment:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new RGBService();

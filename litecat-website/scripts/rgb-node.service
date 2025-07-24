@@ -1,0 +1,41 @@
+[Unit]
+Description=RGB Node for LIGHTCAT Token Distribution
+After=network.target
+
+[Service]
+Type=simple
+User=lightcat
+Group=lightcat
+WorkingDirectory=/opt/rgb-node
+
+# Environment variables
+Environment="RUST_LOG=info"
+Environment="RGB_NETWORK=mainnet"
+Environment="RGB_DATA_DIR=/opt/rgb-node/data"
+
+# Start command
+ExecStart=/opt/rgb-node/rgb-node \
+    --network mainnet \
+    --data-dir /opt/rgb-node/data \
+    --rpc-port 8094 \
+    --rpc-host 127.0.0.1 \
+    --wallet-dir /opt/rgb-node/wallets \
+    --log-level info
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/rgb-node
+
+# Resource limits
+LimitNOFILE=65535
+MemoryLimit=2G
+
+[Install]
+WantedBy=multi-user.target

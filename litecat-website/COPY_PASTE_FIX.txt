@@ -1,0 +1,70 @@
+# COPY AND PASTE THESE COMMANDS INTO YOUR SSH TERMINAL
+# Connect to your VPS first: ssh root@147.93.105.138
+
+# Command 1: Go to the right directory
+cd /var/www/rgblightcat
+
+# Command 2: Stop everything
+pkill -f node && pm2 kill
+
+# Command 3: Create a simple working server
+cat > server.js << 'EOF'
+const express = require('express');
+const path = require('path');
+const app = express();
+
+app.use(express.static(path.join(__dirname, 'client')));
+app.use(express.json());
+
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', message: 'LIGHTCAT Running!' });
+});
+
+app.get('/api/rgb/stats', (req, res) => {
+    res.json({
+        totalBatches: 30000,
+        batchesSold: 2100,
+        tokensPerBatch: 700,
+        pricePerBatch: 2000
+    });
+});
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client', 'index.html'));
+});
+
+app.listen(3000, () => console.log('Server on port 3000'));
+EOF
+
+# Command 4: Install dependencies
+npm install express
+
+# Command 5: Start with PM2
+pm2 start server.js --name lightcat
+pm2 save
+pm2 startup systemd -u root --hp /root
+
+# Command 6: Fix Nginx
+cat > /etc/nginx/sites-available/rgblightcat << 'EOF'
+server {
+    listen 80;
+    server_name rgblightcat.com www.rgblightcat.com;
+    
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+}
+EOF
+
+ln -sf /etc/nginx/sites-available/rgblightcat /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+systemctl reload nginx
+
+# Command 7: Check if it's working
+pm2 status
+curl http://localhost:3000/api/health
+
+# Command 8: Install SSL (optional - run this after site is working)
+certbot --nginx -d rgblightcat.com -d www.rgblightcat.com --non-interactive --agree-tos -m admin@rgblightcat.com --redirect

@@ -1,440 +1,347 @@
+// Supabase Database Service
+// Handles all database operations for LIGHTCAT platform
+
 const { createClient } = require('@supabase/supabase-js');
-const config = require('../../config');
-const { logger } = require('../utils/logger');
 
 class SupabaseService {
-  constructor() {
-    this.client = createClient(
-      config.database.url,
-      config.database.anonKey,
-      {
-        auth: {
-          persistSession: false,
-        },
-        global: {
-          headers: {
-            'x-application-name': 'litecat-api',
-          },
-        },
-      }
-    );
-    
-    this.adminClient = createClient(
-      config.database.url,
-      config.database.serviceKey,
-      {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-        },
-      }
-    );
-    
-    this.cache = new Map();
-    this.setupRealtimeSubscriptions();
-  }
+    constructor() {
+        if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+            console.warn('⚠️  Supabase credentials not found - using mock mode');
+            this.mockMode = true;
+            return;
+        }
 
-  setupRealtimeSubscriptions() {
-    this.salesChannel = this.client
-      .channel('sales-updates')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'purchases' 
-        },
-        (payload) => this.handlePurchaseUpdate(payload)
-      )
-      .subscribe((status) => {
-        logger.info(`Sales channel subscription status: ${status}`);
-      });
-
-    this.gameChannel = this.client
-      .channel('game-scores')
-      .on('postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'game_scores'
-        },
-        (payload) => this.handleGameScoreUpdate(payload)
-      )
-      .subscribe();
-  }
-
-  async handlePurchaseUpdate(payload) {
-    try {
-      logger.info('Purchase update received:', payload);
-      
-      await this.invalidateCache('sales_stats');
-      await this.invalidateCache('available_batches');
-      
-      if (this.purchaseUpdateCallback) {
-        await this.purchaseUpdateCallback(payload);
-      }
-    } catch (error) {
-      logger.error('Error handling purchase update:', error);
-    }
-  }
-
-  async handleGameScoreUpdate(payload) {
-    try {
-      logger.info('Game score update received:', payload);
-      
-      await this.invalidateCache('leaderboard');
-      
-      if (this.gameScoreCallback) {
-        await this.gameScoreCallback(payload);
-      }
-    } catch (error) {
-      logger.error('Error handling game score update:', error);
-    }
-  }
-
-  onPurchaseUpdate(callback) {
-    this.purchaseUpdateCallback = callback;
-  }
-
-  onGameScoreUpdate(callback) {
-    this.gameScoreCallback = callback;
-  }
-
-  async createPurchase(data) {
-    try {
-      const purchase = {
-        wallet_address: data.wallet_address,
-        batch_count: data.batch_count,
-        total_tokens: data.batch_count * 700,
-        total_satoshis: data.batch_count * 2000,
-        game_tier: data.game_tier,
-        payment_address: data.payment_address,
-        coinpayments_id: data.coinpayments_id,
-        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-      };
-
-      const { data: result, error } = await this.adminClient
-        .from('purchases')
-        .insert(purchase)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      await this.logAudit('purchases', result.id, 'CREATE', null, result);
-
-      return result;
-    } catch (error) {
-      logger.error('Error creating purchase:', error);
-      throw error;
-    }
-  }
-
-  async updatePurchase(id, updates) {
-    try {
-      const { data: current, error: fetchError } = await this.adminClient
-        .from('purchases')
-        .select()
-        .eq('id', id)
-        .single();
-
-      if (fetchError) {
-        throw fetchError;
-      }
-
-      const { data: result, error: updateError } = await this.adminClient
-        .from('purchases')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      await this.logAudit('purchases', id, 'UPDATE', current, result);
-
-      return result;
-    } catch (error) {
-      logger.error('Error updating purchase:', error);
-      throw error;
-    }
-  }
-
-  async getPurchase(id) {
-    try {
-      const { data, error } = await this.client
-        .from('purchases')
-        .select()
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      logger.error('Error getting purchase:', error);
-      throw error;
-    }
-  }
-
-  async getSalesStats() {
-    const cacheKey = 'sales_stats';
-    const cached = this.getCached(cacheKey);
-    
-    if (cached) {
-      return cached;
+        this.supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_KEY,
+            {
+                auth: {
+                    autoRefreshToken: false,
+                    persistSession: false
+                }
+            }
+        );
+        this.mockMode = false;
+        console.log('✅ Supabase service initialized');
     }
 
-    try {
-      const { data, error } = await this.client
-        .from('sales_stats')
-        .select()
-        .single();
+    // Game Scores
+    async saveGameScore(walletAddress, score, tier, maxBatches, metadata = {}) {
+        if (this.mockMode) {
+            return {
+                id: `mock-${Date.now()}`,
+                wallet_address: walletAddress,
+                score,
+                tier,
+                max_batches: maxBatches,
+                created_at: new Date().toISOString()
+            };
+        }
 
-      if (error) {
-        throw error;
-      }
-
-      this.setCache(cacheKey, data, 30);
-      return data;
-    } catch (error) {
-      logger.error('Error getting sales stats:', error);
-      throw error;
-    }
-  }
-
-  async getWalletStats(walletAddress) {
-    try {
-      const { data, error } = await this.client
-        .from('wallet_stats')
-        .select()
-        .eq('wallet_address', walletAddress)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
-      return data || {
-        wallet_address: walletAddress,
-        total_purchases: 0,
-        total_batches: 0,
-        total_tokens: 0,
-        highest_tier: 1,
-      };
-    } catch (error) {
-      logger.error('Error getting wallet stats:', error);
-      throw error;
-    }
-  }
-
-  async getAvailableBatches() {
-    const cacheKey = 'available_batches';
-    const cached = this.getCached(cacheKey);
-    
-    if (cached !== null) {
-      return cached;
-    }
-
-    try {
-      const { data, error } = await this.client
-        .rpc('get_available_batches');
-
-      if (error) {
-        throw error;
-      }
-
-      this.setCache(cacheKey, data, 30);
-      return data;
-    } catch (error) {
-      logger.error('Error getting available batches:', error);
-      throw error;
-    }
-  }
-
-  async getWalletPurchaseLimit(walletAddress, gameTier) {
-    try {
-      const { data, error } = await this.client
-        .rpc('get_wallet_purchase_limit', {
-          p_wallet_address: walletAddress,
-          p_game_tier: gameTier,
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      logger.error('Error getting wallet purchase limit:', error);
-      throw error;
-    }
-  }
-
-  async saveGameScore(scoreData) {
-    try {
-      const { data, error } = await this.client
-        .from('game_scores')
-        .insert({
-          wallet_address: scoreData.wallet_address,
-          score: scoreData.score,
-          tier_achieved: scoreData.tier_achieved,
-          session_id: scoreData.session_id,
-          ip_address: scoreData.ip_address,
-          user_agent: scoreData.user_agent,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      logger.error('Error saving game score:', error);
-      throw error;
-    }
-  }
-
-  async getLeaderboard(options = {}) {
-    const { limit = 100, offset = 0, period = 'all' } = options;
-    const cacheKey = `leaderboard:${period}:${limit}:${offset}`;
-    const cached = this.getCached(cacheKey);
-    
-    if (cached) {
-      return cached;
-    }
-
-    try {
-      let query = this.client
-        .from('game_scores')
-        .select('wallet_address, score, tier_achieved, created_at')
-        .order('score', { ascending: false })
-        .limit(limit)
-        .range(offset, offset + limit - 1);
-
-      if (period !== 'all') {
-        const dateMap = {
-          daily: 1,
-          weekly: 7,
-          monthly: 30,
-        };
+        const { data, error } = await this.supabase
+            .from('game_scores')
+            .insert([{
+                wallet_address: walletAddress,
+                score,
+                tier,
+                max_batches: maxBatches,
+                game_duration: 30,
+                ip_address: metadata.ipAddress,
+                user_agent: metadata.userAgent,
+                metadata: metadata.extra || {}
+            }])
+            .select()
+            .single();
         
-        const days = dateMap[period];
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - days);
+        if (error) {
+            console.error('Error saving game score:', error);
+            throw error;
+        }
         
-        query = query.gte('created_at', startDate.toISOString());
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        throw error;
-      }
-
-      const result = {
-        leaderboard: data,
-        period,
-        limit,
-        offset,
-        total: data.length,
-      };
-
-      this.setCache(cacheKey, result, 300);
-      return result;
-    } catch (error) {
-      logger.error('Error getting leaderboard:', error);
-      throw error;
+        return data;
     }
-  }
 
-  async logAudit(tableName, recordId, action, oldValues, newValues) {
-    try {
-      await this.adminClient
-        .from('audit_log')
-        .insert({
-          table_name: tableName,
-          record_id: recordId,
-          action,
-          old_values: oldValues,
-          new_values: newValues,
-        });
-    } catch (error) {
-      logger.error('Error logging audit:', error);
+    async getTopScores(limit = 10) {
+        if (this.mockMode) {
+            return [
+                { wallet_address: 'bc1qmock1', score: 35, tier: 'gold' },
+                { wallet_address: 'bc1qmock2', score: 28, tier: 'gold' },
+                { wallet_address: 'bc1qmock3', score: 22, tier: 'silver' }
+            ];
+        }
+
+        const { data, error } = await this.supabase
+            .from('game_scores')
+            .select('wallet_address, score, tier, created_at')
+            .order('score', { ascending: false })
+            .limit(limit);
+        
+        if (error) throw error;
+        return data;
     }
-  }
 
-  async recordMetric(name, value, unit = null, endpoint = null) {
-    try {
-      await this.client
-        .from('performance_metrics')
-        .insert({
-          metric_name: name,
-          metric_value: value,
-          metric_unit: unit,
-          endpoint,
-        });
-    } catch (error) {
-      logger.error('Error recording metric:', error);
+    // Lightning Payments
+    async createLightningPayment(invoiceData) {
+        if (this.mockMode) {
+            return {
+                id: `mock-${Date.now()}`,
+                ...invoiceData,
+                created_at: new Date().toISOString()
+            };
+        }
+
+        const { data, error } = await this.supabase
+            .from('lightning_payments')
+            .insert([invoiceData])
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data;
     }
-  }
 
-  getCached(key) {
-    const cached = this.cache.get(key);
-    
-    if (cached && cached.expiry > Date.now()) {
-      return cached.data;
+    async updatePaymentStatus(invoiceId, status, paidAt = null) {
+        if (this.mockMode) {
+            return { status, paid_at: paidAt };
+        }
+
+        const updateData = { status };
+        if (paidAt) updateData.paid_at = paidAt;
+
+        const { data, error } = await this.supabase
+            .from('lightning_payments')
+            .update(updateData)
+            .eq('invoice_id', invoiceId)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data;
     }
-    
-    this.cache.delete(key);
-    return null;
-  }
 
-  setCache(key, data, ttlSeconds) {
-    this.cache.set(key, {
-      data,
-      expiry: Date.now() + (ttlSeconds * 1000),
-    });
-  }
+    // Purchases
+    async createPurchase(purchaseData) {
+        if (this.mockMode) {
+            return {
+                id: `mock-${Date.now()}`,
+                ...purchaseData,
+                created_at: new Date().toISOString()
+            };
+        }
 
-  async invalidateCache(pattern) {
-    const keysToDelete = [];
-    
-    for (const key of this.cache.keys()) {
-      if (key.includes(pattern)) {
-        keysToDelete.push(key);
-      }
+        const { data, error } = await this.supabase
+            .from('purchases')
+            .insert([purchaseData])
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data;
     }
-    
-    keysToDelete.forEach(key => this.cache.delete(key));
-  }
 
-  async cacheSet(key, value, ttlSeconds) {
-    this.setCache(key, value, ttlSeconds);
-  }
+    async updatePurchaseStatus(orderId, updates) {
+        if (this.mockMode) {
+            return { order_id: orderId, ...updates };
+        }
 
-  async cacheGet(key) {
-    return this.getCached(key);
-  }
-
-  async cleanup() {
-    if (this.salesChannel) {
-      await this.salesChannel.unsubscribe();
+        const { data, error } = await this.supabase
+            .from('purchases')
+            .update(updates)
+            .eq('order_id', orderId)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data;
     }
-    
-    if (this.gameChannel) {
-      await this.gameChannel.unsubscribe();
+
+    async getPurchaseByOrderId(orderId) {
+        if (this.mockMode) {
+            return null;
+        }
+
+        const { data, error } = await this.supabase
+            .from('purchases')
+            .select('*')
+            .eq('order_id', orderId)
+            .single();
+        
+        if (error && error.code !== 'PGRST116') throw error;
+        return data;
     }
-    
-    this.cache.clear();
-  }
+
+    // RGB Transfers
+    async createRgbTransfer(transferData) {
+        if (this.mockMode) {
+            return {
+                id: `mock-${Date.now()}`,
+                ...transferData,
+                created_at: new Date().toISOString()
+            };
+        }
+
+        const { data, error } = await this.supabase
+            .from('rgb_transfers')
+            .insert([transferData])
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data;
+    }
+
+    async updateRgbTransferStatus(consignmentId, updates) {
+        if (this.mockMode) {
+            return { consignment_id: consignmentId, ...updates };
+        }
+
+        const { data, error } = await this.supabase
+            .from('rgb_transfers')
+            .update(updates)
+            .eq('consignment_id', consignmentId)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data;
+    }
+
+    // Stats
+    async getPurchaseStats() {
+        if (this.mockMode) {
+            return {
+                unique_buyers: 42,
+                total_purchases: 156,
+                batches_sold: 789,
+                tokens_sold: 552300,
+                total_sats_received: 1578000,
+                last_sale_time: new Date().toISOString()
+            };
+        }
+
+        const { data, error } = await this.supabase
+            .from('purchase_stats')
+            .select('*')
+            .single();
+        
+        if (error && error.code !== 'PGRST116') {
+            // No stats yet
+            return {
+                unique_buyers: 0,
+                total_purchases: 0,
+                batches_sold: 0,
+                tokens_sold: 0,
+                total_sats_received: 0,
+                last_sale_time: null
+            };
+        }
+        
+        return data;
+    }
+
+    async getTierStats() {
+        if (this.mockMode) {
+            return [
+                { tier: 'bronze', purchase_count: 50, batches_sold: 200, tokens_sold: 140000 },
+                { tier: 'silver', purchase_count: 30, batches_sold: 200, tokens_sold: 140000 },
+                { tier: 'gold', purchase_count: 20, batches_sold: 180, tokens_sold: 126000 }
+            ];
+        }
+
+        const { data, error } = await this.supabase
+            .from('tier_stats')
+            .select('*')
+            .order('tier');
+        
+        if (error) throw error;
+        return data || [];
+    }
+
+    // Wallet checks
+    async checkWalletPurchaseLimit(walletAddress, requestedBatches) {
+        if (this.mockMode) return true;
+
+        const { data, error } = await this.supabase
+            .rpc('check_wallet_purchase_limit', {
+                p_wallet_address: walletAddress,
+                p_batch_count: requestedBatches
+            });
+        
+        if (error) throw error;
+        return data;
+    }
+
+    async getWalletPurchaseHistory(walletAddress) {
+        if (this.mockMode) return [];
+
+        const { data, error } = await this.supabase
+            .from('purchases')
+            .select('*')
+            .eq('wallet_address', walletAddress)
+            .in('status', ['paid', 'delivered'])
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return data || [];
+    }
+
+    // User management
+    async findOrCreateUser(walletAddress) {
+        if (this.mockMode) {
+            return {
+                id: `mock-user-${walletAddress}`,
+                wallet_address: walletAddress,
+                created_at: new Date().toISOString()
+            };
+        }
+
+        // First try to find existing user
+        const { data: existingUser, error: findError } = await this.supabase
+            .from('users')
+            .select('*')
+            .eq('wallet_address', walletAddress)
+            .single();
+        
+        if (existingUser) return existingUser;
+        
+        // Create new user if not found
+        const { data: newUser, error: createError } = await this.supabase
+            .from('users')
+            .insert([{ wallet_address: walletAddress }])
+            .select()
+            .single();
+        
+        if (createError) throw createError;
+        return newUser;
+    }
+
+    // Health check
+    async healthCheck() {
+        if (this.mockMode) {
+            return { status: 'ok', mode: 'mock' };
+        }
+
+        try {
+            const { count, error } = await this.supabase
+                .from('users')
+                .select('*', { count: 'exact', head: true });
+            
+            if (error) throw error;
+            
+            return { 
+                status: 'ok', 
+                mode: 'production',
+                tablesAccessible: true
+            };
+        } catch (error) {
+            return { 
+                status: 'error', 
+                mode: 'production',
+                error: error.message 
+            };
+        }
+    }
 }
 
+// Export singleton instance
 module.exports = new SupabaseService();

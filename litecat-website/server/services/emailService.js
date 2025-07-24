@@ -619,6 +619,100 @@ class EmailService {
       }
     });
   }
+
+  async sendInvoiceCreated(email, data) {
+    return this.sendLightningInvoice({
+      email,
+      invoiceId: data.invoiceId,
+      lightningInvoice: data.lightningInvoice,
+      amountSats: data.amount,
+      amountBTC: (data.amount / 100000000).toFixed(8),
+      batches: data.batchCount || Math.floor(data.amount / 2000),
+      tokens: (data.batchCount || Math.floor(data.amount / 2000)) * 700,
+      expiresAt: data.expiresAt || new Date(Date.now() + 30 * 60 * 1000)
+    });
+  }
+
+  async sendPaymentConfirmed(email, data) {
+    const { invoiceId, amount, downloadUrl, consignment } = data;
+    
+    const content = `
+      <h2 style="color: #FFFF00; text-align: center;">🎉 Payment Confirmed!</h2>
+      
+      <p>Your Lightning payment has been confirmed and your LIGHTCAT tokens are ready!</p>
+      
+      <div style="background: #1a1a1a; border: 2px solid #FFFF00; border-radius: 10px; padding: 20px; margin: 20px 0;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2);">
+              <span style="color: rgba(255, 255, 255, 0.7);">Invoice ID</span>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 0, 0.2); text-align: right;">
+              <span style="color: #FFFF00; font-weight: bold; font-family: monospace;">${invoiceId}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0;">
+              <span style="color: rgba(255, 255, 255, 0.7);">Token Amount</span>
+            </td>
+            <td style="padding: 10px 0; text-align: right;">
+              <span style="color: #FFFF00; font-weight: bold; font-family: monospace;">${amount.toLocaleString()} LIGHTCAT</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${downloadUrl}" class="button" style="background: #FFFF00; color: #000; padding: 15px 40px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block; text-transform: uppercase;">Download RGB Consignment</a>
+      </div>
+      
+      <div style="background: rgba(255, 255, 0, 0.1); border: 1px solid #FFFF00; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <strong>What's Next?</strong>
+        <ol style="margin: 10px 0; padding-left: 20px; line-height: 1.8;">
+          <li>Download the consignment file using the button above</li>
+          <li>Save it securely - this is your proof of token ownership</li>
+          <li>Import the consignment into your RGB-compatible wallet</li>
+          <li>Your LIGHTCAT tokens will appear in your wallet</li>
+        </ol>
+      </div>
+      
+      <div style="background: rgba(255, 0, 0, 0.1); border: 1px solid #FF5252; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <strong>Important Security Notes:</strong>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+          <li>Keep your consignment file safe - losing it means losing access to your tokens</li>
+          <li>Make backups of the consignment file</li>
+          <li>Never share your consignment file with anyone</li>
+          <li>The download link expires in 7 days</li>
+        </ul>
+      </div>
+      
+      <div style="text-align: center; margin-top: 30px;">
+        <p style="color: rgba(255, 255, 255, 0.7);">Thank you for joining the LIGHTCAT community!</p>
+        <p style="color: #FFFF00; font-size: 24px;">🐱⚡</p>
+      </div>
+    `;
+
+    // Send email with consignment as attachment if available
+    const attachments = [];
+    if (consignment) {
+      attachments.push({
+        filename: `lightcat-consignment-${invoiceId}.rgb`,
+        content: Buffer.from(consignment, 'base64'),
+        contentType: 'application/octet-stream'
+      });
+    }
+
+    return this.sendEmail({
+      to: email,
+      subject: `✅ Your LIGHTCAT Tokens Are Ready - Invoice #${invoiceId}`,
+      template: 'payment-confirmed',
+      data: {
+        content,
+        ...data
+      },
+      attachments
+    });
+  }
 }
 
 module.exports = new EmailService();
