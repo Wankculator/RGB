@@ -1,17 +1,15 @@
-// Refactored RGB Payment Controller - Under 500 lines
-const { createClient } = require('@supabase/supabase-js');
+// Refactored RGB Payment Controller - Using DatabaseService
 const { logger } = require('../utils/logger');
-const lightningService = require('../services/lightningService');
+const LightningServiceFactory = require('../services/lightningServiceFactory');
+const lightningService = LightningServiceFactory.create();
 const rgbService = require('../services/rgbService');
+const EnhancedRGBService = require('../services/enhancedRgbService');
+const enhancedRgbService = new EnhancedRGBService();
 const emailService = require('../services/emailService');
 const validationService = require('../services/validationService');
 const paymentHelper = require('../services/paymentHelperService');
-
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+const transactionManager = require('../middleware/transactionManager');
+const constants = require('../config/constants');
 
 class RGBPaymentController {
   /**
@@ -19,105 +17,153 @@ class RGBPaymentController {
    */
   async createInvoice(req, res) {
     try {
-      const { email, rgbInvoice, tier } = req.body;
-      let batchCount = parseInt(req.body.batchCount);
-      
-      // Handle NaN or invalid values
-      if (isNaN(batchCount) || batchCount === null || batchCount === undefined) {
-        batchCount = 1;
-      }
+      const { rgbInvoice, batchCount, email, tier } = req.body;
 
-      // Validate RGB invoice
-      const rgbValidation = validationService.validateRGBInvoice(rgbInvoice);
-      if (!rgbValidation.isValid) {
+      // Validate inputs
+      const validation = validationService.validateRGBInvoice(rgbInvoice);
+      if (!validation.isValid) {
         return res.status(400).json({
           success: false,
-          error: rgbValidation.error
+          error: validation.error
         });
       }
 
-      // Validate batch count with tier limits
-      const batchValidation = validationService.validateBatchCount(batchCount, tier);
-      if (!batchValidation.isValid) {
+      // Validate tier-based batch count - CRITICAL: Mint is LOCKED
+      const tierLimits = constants.TIER_LIMITS;
+
+      // CRITICAL: Check if tier is provided - mint is LOCKED without game play
+      if (!tier) {
+        logger.warn(`Rejecting purchase: ${batchCount} batches requested without tier - mint is LOCKED`);
         return res.status(400).json({
           success: false,
-          error: batchValidation.error
+          error: 'Mint is locked! You must play the game to unlock purchasing. Score 11+ for Bronze tier.'
         });
       }
 
-      // Check if mint is closed
-      const mintStatus = await this._checkMintStatus();
-      if (mintStatus.closed) {
-        return res.status(400).json({
-          success: false,
-          error: mintStatus.message
-        });
-      }
-
-      // Calculate payment details
-      const paymentDetails = paymentHelper.calculatePaymentDetails(batchCount);
-      
-      // Generate invoice ID and reference
-      const invoiceId = paymentHelper.generateInvoiceId();
-      const reference = paymentHelper.generatePaymentReference();
-
-      // Create Lightning invoice
-      const lightningInvoice = await lightningService.createInvoice({
-        amount: paymentDetails.totalSats,
-        memo: `LIGHTCAT Purchase - ${paymentDetails.batchCount} batches (${paymentDetails.totalTokens} tokens)`,
-        expiry: 900 // 15 minutes
-      });
-
-      // Save to database
-      await this._saveInvoice({
-        invoiceId,
-        email,
-        rgbInvoice,
-        lightningInvoice: lightningInvoice.payment_request,
-        paymentHash: lightningInvoice.r_hash,
-        amount: paymentDetails.totalSats,
-        batchCount: paymentDetails.batchCount,
-        tokenAmount: paymentDetails.totalTokens,
-        reference
-      });
-
-      // Send confirmation email if provided
-      if (email) {
-        const emailValidation = validationService.validateEmail(email);
-        if (emailValidation.isValid) {
-          await emailService.sendInvoiceCreated(email, {
-            invoiceId,
-            amount: paymentDetails.totalSats,
-            lightningInvoice: lightningInvoice.payment_request
+      // Validate batch count against tier limit
+      if (tier && tierLimits[tier]) {
+        if (batchCount > tierLimits[tier]) {
+          return res.status(400).json({
+            success: false,
+            error: `Maximum ${tierLimits[tier]} batches allowed for ${tier} tier`
           });
         }
       }
 
-      logger.info('Lightning invoice created', {
-        invoiceId,
-        amount: paymentDetails.totalSats,
-        batchCount: paymentDetails.batchCount
+      // Basic batch count validation
+      if (!paymentHelper.validateBatchCount(batchCount)) {
+        return res.status(400).json({
+          success: false,
+          error: `Invalid batch count. Must be between 1 and ${constants.MAX_BATCH_PURCHASE}.`
+        });
+      }
+
+      // Check if mint is still open
+      const mintStatus = await this._checkMintStatus(req);
+      if (mintStatus.isClosed) {
+        return res.status(400).json({
+          success: false,
+          error: 'Token sale has ended',
+          remainingBatches: 0
+        });
+      }
+
+      // Calculate amount
+      const amountSats = paymentHelper.calculateAmount(batchCount);
+      const description = paymentHelper.generateDescription(batchCount);
+
+      // Check if testnet mode
+      const isTestnet = req.headers['x-network'] === 'testnet' || 
+                       process.env.USE_TESTNET === 'true';
+      
+      // Create Lightning invoice
+      const lightningInvoice = await lightningService.createInvoice({
+        amount: amountSats,
+        description,
+        expiryMinutes: 15,
+        orderId: `rgb-${Date.now()}`,
+        buyerEmail: email,
+        metadata: {
+          rgbInvoice,
+          batchCount,
+          network: isTestnet ? 'testnet' : 'mainnet',
+          ...req.body.metadata
+        }
       });
 
+      // Prepare invoice data
+      const invoiceData = {
+        invoice_id: lightningInvoice.id,
+        rgb_invoice: rgbInvoice,
+        batch_count: batchCount,
+        amount_sats: amountSats,
+        payment_hash: lightningInvoice.payment_hash,
+        payment_request: lightningInvoice.payment_request,
+        status: 'pending',
+        expires_at: lightningInvoice.expires_at,
+        wallet_address: validationService.extractWalletAddress(rgbInvoice),
+        email: email || null,
+        token_amount: batchCount * 700
+      };
+
+      // Save to database within transaction
+      const invoice = await req.databaseService.createPurchase(invoiceData);
+
+      if (!invoice) {
+        throw new Error('Failed to save invoice');
+      }
+      
+      // Commit transaction on success
+      if (req.commitTransaction) {
+        await req.commitTransaction();
+      }
+
+      // Log invoice creation
+      logger.info('RGB invoice created', {
+        invoiceId: invoice.invoice_id,
+        batchCount,
+        amount: amountSats
+      });
+
+      // Send email if provided
+      if (email) {
+        await emailService.sendInvoiceCreated(email, {
+          invoiceId: invoice.invoice_id,
+          amount: amountSats,
+          expiresAt: invoice.expires_at
+        }).catch(err => {
+          logger.error('Failed to send invoice email:', err);
+        });
+      }
+
+      // Return response
       return res.json({
         success: true,
-        invoiceId,
-        lightningInvoice: lightningInvoice.payment_request,
-        amount: paymentDetails.totalSats,
-        expiresAt: paymentHelper.calculateExpiryTime()
+        invoiceId: invoice.invoice_id,
+        lightningInvoice: invoice.payment_request,
+        amount: amountSats,
+        expiresAt: invoice.expires_at,
+        qrCode: `lightning:${invoice.payment_request}`,
+        remainingBatches: mintStatus.remainingBatches - batchCount
       });
 
     } catch (error) {
-      logger.error('Failed to create invoice:', error);
+      logger.error('Failed to create RGB invoice:', error);
+      
+      // Rollback transaction on error
+      if (req.rollbackTransaction) {
+        await req.rollbackTransaction();
+      }
+      
       return res.status(500).json({
         success: false,
-        error: 'Failed to create invoice'
+        error: 'Failed to create invoice. Please try again.'
       });
     }
   }
 
   /**
-   * Check payment status
+   * Check payment status and deliver RGB consignment if paid
    */
   async checkPaymentStatus(req, res) {
     try {
@@ -131,13 +177,9 @@ class RGBPaymentController {
       }
 
       // Get invoice from database
-      const { data: invoice, error } = await supabase
-        .from('rgb_purchases')
-        .select('*')
-        .eq('invoice_id', invoiceId)
-        .single();
+      const invoice = await req.databaseService.getPurchase(invoiceId);
 
-      if (error || !invoice) {
+      if (!invoice) {
         return res.status(404).json({
           success: false,
           error: 'Invoice not found'
@@ -159,8 +201,19 @@ class RGBPaymentController {
           invoice.payment_hash
         );
 
-        if (paymentStatus.settled) {
-          await this._handlePaymentReceived(invoice);
+        if (paymentStatus.isPaid) {
+          // Process the payment
+          await this._handlePaymentReceived(req, invoice);
+          
+          // Get updated invoice
+          const updatedInvoice = await req.databaseService.getPurchase(invoiceId);
+          
+          return res.json({
+            success: true,
+            status: 'paid',
+            consignment: updatedInvoice.consignment_file,
+            message: 'Payment received! Your RGB tokens are ready.'
+          });
         }
       }
 
@@ -168,7 +221,8 @@ class RGBPaymentController {
       return res.json({
         success: true,
         status: invoice.status,
-        consignment: invoice.status === 'delivered' ? invoice.consignment_file : null
+        consignment: invoice.status === 'delivered' ? invoice.consignment_file : null,
+        message: paymentHelper.getStatusMessage(invoice.status)
       });
 
     } catch (error) {
@@ -181,198 +235,184 @@ class RGBPaymentController {
   }
 
   /**
-   * Download consignment file
+   * Download RGB consignment file
    */
   async downloadConsignment(req, res) {
     try {
       const { invoiceId } = req.params;
 
       // Get purchase record
-      const { data: purchase, error } = await supabase
-        .from('rgb_purchases')
-        .select('*')
-        .eq('invoice_id', invoiceId)
-        .single();
+      const purchase = await req.databaseService.getPurchase(invoiceId);
 
-      if (error || !purchase) {
+      if (!purchase) {
         return res.status(404).json({
           success: false,
-          error: 'Purchase not found'
+          error: 'Invoice not found'
         });
       }
 
+      // Check if payment is complete
       if (purchase.status !== 'delivered' || !purchase.consignment_file) {
         return res.status(400).json({
           success: false,
-          error: 'Consignment not available'
+          error: 'Payment not complete or consignment not ready'
         });
       }
 
-      // Convert base64 to buffer
-      const buffer = Buffer.from(purchase.consignment_file, 'base64');
-      const filename = paymentHelper.generateConsignmentFilename(
-        invoiceId,
-        purchase.batch_count
-      );
+      // Prepare file download
+      const consignmentBuffer = Buffer.from(purchase.consignment_file, 'base64');
+      const filename = `lightcat_${invoiceId}_consignment.rgb`;
 
       // Set headers for file download
-      res.set({
-        'Content-Type': 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': buffer.length
-      });
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', consignmentBuffer.length);
 
-      return res.send(buffer);
+      // Send file
+      return res.send(consignmentBuffer);
 
     } catch (error) {
       logger.error('Failed to download consignment:', error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to download consignment'
+        error: 'Failed to download consignment file'
       });
     }
   }
 
   /**
-   * Get current sales statistics
+   * Get current sale statistics
    */
   async getStats(req, res) {
     try {
-      const stats = await this._getSalesStats();
+      const stats = await req.databaseService.getSalesStats();
+      const totalBatches = 27900; // 93% of 21M tokens (19,530,000 ÷ 700 per batch)
       
-      return res.json({
+      const responseStats = {
         success: true,
-        stats
-      });
+        stats: {
+          batchesSold: stats.batches_sold || 0,
+          batchesRemaining: totalBatches - (stats.batches_sold || 0),
+          tokensSold: (stats.batches_sold || 0) * 700,
+          uniqueBuyers: stats.unique_buyers || 0,
+          currentBatchPrice: 2000,
+          lastSaleTime: stats.last_sale_time,
+          percentSold: ((stats.batches_sold || 0) / totalBatches * 100).toFixed(2)
+        }
+      };
+
+      return res.json(responseStats);
 
     } catch (error) {
       logger.error('Failed to get stats:', error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to get statistics'
+        error: 'Failed to retrieve statistics'
       });
     }
   }
 
   /**
-   * Webhook handler for Lightning payments
+   * Admin: manually mark payment as received
    */
-  async handleLightningWebhook(req, res) {
+  async markPaymentReceived(req, res) {
     try {
-      const { invoice, status, amount, paymentHash } = req.body;
+      const { invoiceId } = req.params;
 
-      // Validate webhook data
-      if (!paymentHash || !status) {
-        return res.status(400).json({
+      // Find the purchase
+      const purchase = await req.databaseService.getPurchase(invoiceId);
+
+      if (!purchase) {
+        return res.status(404).json({
           success: false,
-          error: 'Invalid webhook data'
+          error: 'Invoice not found'
         });
       }
 
-      // Find the purchase
-      const { data: purchase, error } = await supabase
-        .from('rgb_purchases')
-        .select('*')
-        .eq('payment_hash', paymentHash)
-        .single();
-
-      if (error || !purchase) {
-        logger.warn('Webhook for unknown payment:', paymentHash);
-        return res.json({ success: true });
+      if (purchase.status !== 'pending') {
+        return res.status(400).json({
+          success: false,
+          error: `Invoice is already ${purchase.status}`
+        });
       }
 
-      // Handle payment based on status
-      if (status === 'paid' && purchase.status === 'pending') {
-        await this._handlePaymentReceived(purchase);
-      }
+      // Process the payment
+      await this._handlePaymentReceived(req, purchase);
 
-      return res.json({ success: true });
+      return res.json({
+        success: true,
+        message: 'Payment marked as received and RGB consignment generated'
+      });
 
     } catch (error) {
-      logger.error('Webhook processing failed:', error);
+      logger.error('Failed to mark payment received:', error);
       return res.status(500).json({
         success: false,
-        error: 'Webhook processing failed'
+        error: 'Failed to process payment'
       });
     }
   }
 
   // Private helper methods
-  async _checkMintStatus() {
-    const { data: salesData } = await supabase
-      .from('rgb_sales_stats')
-      .select('mint_closed, total_batches_sold')
-      .single();
+  async _checkMintStatus(req) {
+    const stats = await req.databaseService.getSalesStats();
+    const totalBatches = 27900; // 93% of 21M tokens (19,530,000 ÷ 700 per batch)
+    const soldBatches = stats.batches_sold || 0;
     
-    if (salesData?.mint_closed) {
-      return {
-        closed: true,
-        message: 'Token sale has ended'
-      };
-    }
-
-    if (salesData?.total_batches_sold >= 30000) {
-      return {
-        closed: true,
-        message: 'All tokens have been sold'
-      };
-    }
-
-    return { closed: false };
+    return {
+      isClosed: soldBatches >= totalBatches,
+      remainingBatches: totalBatches - soldBatches,
+      totalSold: soldBatches
+    };
   }
 
-  async _saveInvoice(invoiceData) {
-    const { error } = await supabase
-      .from('rgb_purchases')
-      .insert({
-        invoice_id: invoiceData.invoiceId,
-        email: invoiceData.email,
-        rgb_invoice: invoiceData.rgbInvoice,
-        lightning_invoice: invoiceData.lightningInvoice,
-        payment_hash: invoiceData.paymentHash,
-        amount_sats: invoiceData.amount,
-        batch_count: invoiceData.batchCount,
-        token_amount: invoiceData.tokenAmount,
-        reference: invoiceData.reference,
-        status: 'pending',
-        expires_at: paymentHelper.calculateExpiryTime()
-      });
-
-    if (error) {
-      throw new Error('Failed to save invoice: ' + error.message);
+  async _handlePaymentReceived(req, purchase) {
+    // Create a new transaction context if not already in one
+    const needsTransaction = !req.transactionId;
+    
+    if (needsTransaction) {
+      // Create transaction wrapper
+      const transaction = {
+        operations: [],
+        rollback: async () => {
+          // Rollback logic
+          for (const op of transaction.operations.reverse()) {
+            try {
+              await op.rollback();
+            } catch (err) {
+              logger.error('Rollback failed:', err);
+            }
+          }
+        }
+      };
+      
+      req.localTransaction = transaction;
     }
-  }
-
-  async _handlePaymentReceived(purchase) {
+    
     try {
       // Update status to paid
-      await supabase
-        .from('rgb_purchases')
-        .update({ 
-          status: 'paid',
-          paid_at: new Date().toISOString()
-        })
-        .eq('invoice_id', purchase.invoice_id);
+      await req.databaseService.updatePurchase(purchase.invoice_id, {
+        status: 'paid',
+        paid_at: new Date().toISOString()
+      });
 
-      // Generate RGB consignment
-      const consignment = await rgbService.generateConsignment({
+      // Generate RGB consignment using enhanced service for proper token tracking
+      const consignment = await enhancedRgbService.generateConsignment({
         rgbInvoice: purchase.rgb_invoice,
-        amount: purchase.token_amount,
-        invoiceId: purchase.invoice_id
+        batchCount: purchase.batch_count,
+        invoiceId: purchase.invoice_id,
+        walletAddress: purchase.wallet_address
       });
 
       // Update with consignment
-      await supabase
-        .from('rgb_purchases')
-        .update({
-          status: 'delivered',
-          consignment_file: consignment,
-          delivered_at: new Date().toISOString()
-        })
-        .eq('invoice_id', purchase.invoice_id);
+      await req.databaseService.updatePurchase(purchase.invoice_id, {
+        status: 'delivered',
+        consignment_file: consignment,
+        delivered_at: new Date().toISOString()
+      });
 
       // Update sales statistics
-      await this._updateSalesStats(purchase);
+      await this._updateSalesStats(req, purchase);
 
       // Send confirmation email with consignment attachment
       if (purchase.email) {
@@ -391,42 +431,68 @@ class RGBPaymentController {
 
     } catch (error) {
       logger.error('Failed to handle payment:', error);
+      
+      // Rollback local transaction if created
+      if (needsTransaction && req.localTransaction) {
+        await req.localTransaction.rollback();
+      }
+      
       throw error;
     }
   }
 
-  async _updateSalesStats(purchase) {
-    const { data: current } = await supabase
-      .from('rgb_sales_stats')
-      .select('*')
-      .single();
-
+  async _updateSalesStats(req, purchase) {
+    const current = await req.databaseService.getSalesStats();
+    
     const updates = {
-      total_sold: (current?.total_sold || 0) + purchase.token_amount,
-      total_batches_sold: (current?.total_batches_sold || 0) + purchase.batch_count,
-      unique_buyers: (current?.unique_buyers || 0) + 1,
-      last_sale_at: new Date().toISOString()
+      batches_sold: (current.batches_sold || 0) + purchase.batch_count,
+      unique_buyers: current.unique_buyers || 0, // This would need proper counting
+      total_revenue_sats: (current.total_revenue_sats || 0) + purchase.amount_sats,
+      last_sale_time: new Date().toISOString()
     };
 
-    await supabase
-      .from('rgb_sales_stats')
-      .upsert(updates);
+    await req.databaseService.updateSalesStats(updates);
   }
-
-  async _getSalesStats() {
-    const { data: stats } = await supabase
-      .from('rgb_sales_stats')
-      .select('*')
-      .single();
-
-    return {
-      totalSold: stats?.total_sold || 0,
-      batchesSold: stats?.total_batches_sold || 0,
-      remainingBatches: 30000 - (stats?.total_batches_sold || 0),
-      uniqueBuyers: stats?.unique_buyers || 0,
-      percentSold: ((stats?.total_batches_sold || 0) / 30000 * 100).toFixed(2),
-      mintClosed: stats?.mint_closed || false
-    };
+  
+  /**
+   * Get purchase history for a wallet address
+   */
+  async getPurchaseHistory(req, res) {
+    try {
+      const { address } = req.query;
+      
+      if (!address) {
+        return res.status(400).json({
+          success: false,
+          error: 'Wallet address is required'
+        });
+      }
+      
+      // Get all purchases for this address
+      const purchases = await req.databaseService.getPurchasesByWallet(address);
+      
+      // Sort by date (newest first)
+      purchases.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      
+      return res.json({
+        success: true,
+        address,
+        purchases,
+        summary: {
+          totalPurchases: purchases.length,
+          totalBatches: purchases.reduce((sum, p) => sum + p.batch_count, 0),
+          totalTokens: purchases.reduce((sum, p) => sum + p.token_amount, 0),
+          totalSpent: purchases.reduce((sum, p) => sum + p.amount_sats, 0)
+        }
+      });
+      
+    } catch (error) {
+      logger.error('Failed to get purchase history:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve purchase history'
+      });
+    }
   }
 }
 

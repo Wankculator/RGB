@@ -45,16 +45,16 @@ export class GameUI {
             // Store tier data
             this.unlockedTier = tier;
             
-            // Set allocation message based on tier
+            // Set allocation message based on tier - UPDATED LIMITS
             const tierBatches = {
-                bronze: 3,
-                silver: 5,
-                gold: 10
+                bronze: 10,   // Updated from 3
+                silver: 20,   // Updated from 5
+                gold: 30      // Updated from 10
             };
             const tierTokens = {
-                bronze: '2,100',
-                silver: '3,500',
-                gold: '7,000'
+                bronze: '7,000',    // 10 batches * 700 tokens
+                silver: '14,000',   // 20 batches * 700 tokens
+                gold: '21,000'      // 30 batches * 700 tokens
             };
             
             allocationMessageEl.innerHTML = `

@@ -1329,19 +1329,19 @@
                         <label class="form-label" style="display: block; margin-bottom: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Number of Batches</label>
                         <div class="batch-selector">
                             <button type="button" class="batch-btn" id="decreaseBatch">−</button>
-                            <div class="batch-count" id="batchCount">1</div>
+                            <div class="batch-count" id="batchCount">0</div>
                             <button type="button" class="batch-btn" id="increaseBatch">+</button>
                         </div>
                         <p style="text-align: center; color: rgba(255, 255, 255, 0.6); margin-top: 20px;">
-                            Maximum allowed: <span id="maxBatches" style="color: var(--yellow);">5</span> batches
+                            Maximum allowed: <span id="maxBatches" style="color: var(--yellow);">0</span> batches
                         </p>
                     </div>
                     
                     <div style="background: rgba(255, 255, 0, 0.05); border: 1px solid rgba(255, 255, 0, 0.2); border-radius: 15px; padding: 30px; margin: 40px 0; text-align: center;">
-                        <div style="font-size: 2.5rem; font-weight: 700; color: var(--yellow); font-family: 'JetBrains Mono', monospace;" id="totalBTC">0.00002000 BTC</div>
+                        <div style="font-size: 2.5rem; font-weight: 700; color: var(--yellow); font-family: 'JetBrains Mono', monospace;" id="totalBTC">0.00000000 BTC</div>
                         <div style="margin-top: 10px; color: rgba(255, 255, 255, 0.7);">
-                            <span id="totalSats">2,000</span> satoshis • 
-                            <span id="tokenAmount">700</span> LIGHTCAT tokens
+                            <span id="totalSats">0</span> satoshis • 
+                            <span id="tokenAmount">0</span> LIGHTCAT tokens
                         </div>
                     </div>
                     
@@ -1931,9 +1931,10 @@
             const PRICE_PER_BATCH_SATS = 2000;
             
             // State
-            let currentBatches = 1;
-            let maxBatches = 5; // Default, will be updated based on game tier
+            let currentBatches = 0; // Start at 0 - mint is locked by default
+            let maxBatches = 0; // CRITICAL: Mint is LOCKED without tier
             let isMintClosed = false; // Track if mint is closed
+            let mintLocked = true; // Mint requires game play to unlock
             
             // Check for unlocked tier from game
             // Handle both regular URL params and hash params (e.g., #purchase?tier=gold)
@@ -1951,18 +1952,20 @@
             unlockedTier = unlockedTier || localStorage.getItem('unlockedTier');
             
             if (unlockedTier) {
+                mintLocked = false; // Unlock mint when tier is present
                 switch(unlockedTier.toLowerCase()) {
                     case 'bronze':
-                        maxBatches = 5;
+                        maxBatches = 10;  // Updated from 5
                         break;
                     case 'silver':
-                        maxBatches = 8;
+                        maxBatches = 20;  // Updated from 8
                         break;
                     case 'gold':
-                        maxBatches = 10;
+                        maxBatches = 30;  // Updated from 10
                         break;
                     default:
-                        maxBatches = 5;
+                        maxBatches = 0;   // No purchase without valid tier
+                        mintLocked = true;
                 }
                 maxBatchesEl.textContent = maxBatches;
                 
@@ -2069,6 +2072,12 @@
                     return;
                 }
                 
+                // Check if mint is locked (no tier unlocked)
+                if (mintLocked) {
+                    showNotification('MINT IS LOCKED! You must play the game to unlock purchasing. Score 11+ for Bronze tier.', 'error');
+                    return;
+                }
+                
                 const rgbInvoice = document.getElementById('rgbInvoice').value.trim();
                 const email = document.getElementById('emailAddress').value.trim();
                 
@@ -2099,7 +2108,8 @@
                         body: JSON.stringify({
                             rgbInvoice: rgbInvoice,
                             email: email,
-                            batchCount: currentBatches
+                            batchCount: currentBatches,
+                            tier: unlockedTier // Include tier for backend validation
                         })
                     });
                     
@@ -2236,6 +2246,47 @@
             // Initialize display
             updateBatchDisplay();
             
+            // CRITICAL: Handle mint lock UI
+            if (mintLocked) {
+                // Hide the entire purchase form and show lock message
+                const purchaseForm = document.getElementById('purchaseForm');
+                const formContainer = purchaseForm.parentElement;
+                
+                // Create mint locked message
+                const lockMessage = document.createElement('div');
+                lockMessage.style.cssText = `
+                    background: rgba(255, 0, 0, 0.1);
+                    border: 2px solid #ff4444;
+                    border-radius: 15px;
+                    padding: 40px;
+                    text-align: center;
+                    margin: 40px 0;
+                `;
+                lockMessage.innerHTML = `
+                    <h3 style="color: #ff4444; font-size: 2rem; margin-bottom: 20px;">🔒 MINT IS LOCKED</h3>
+                    <p style="color: rgba(255, 255, 255, 0.8); font-size: 1.2rem; margin-bottom: 30px;">
+                        You must play the game to unlock purchasing!<br>
+                        Score 11+ to unlock Bronze tier (10 batches)
+                    </p>
+                    <a href="/game.html" class="btn" style="display: inline-block; background: var(--yellow); color: #000; font-weight: bold;">
+                        PLAY GAME TO UNLOCK
+                    </a>
+                `;
+                
+                // Hide the form and show lock message
+                purchaseForm.style.display = 'none';
+                formContainer.insertBefore(lockMessage, purchaseForm);
+                
+                // Also update the max batches display to show 0
+                maxBatchesEl.textContent = '0';
+                batchCountEl.textContent = '0';
+                currentBatches = 0;
+                
+                // Disable batch controls
+                decreaseBtn.disabled = true;
+                increaseBtn.disabled = true;
+            }
+            
             // Update mint stats from API
             async function updateMintStats() {
                 try {
@@ -2255,14 +2306,14 @@
                     const PUBLIC_BATCHES = 27900;
                     
                     // Get actual public sales
-                    const publicSoldBatches = stats.totalBatchesSold || 0;
+                    const publicSoldBatches = stats.batchesSold || 0;
                     const totalAllocated = PRE_ALLOCATED + publicSoldBatches;
-                    const publicRemaining = PUBLIC_BATCHES - publicSoldBatches;
+                    const publicRemaining = stats.batchesRemaining || (PUBLIC_BATCHES - publicSoldBatches);
                     const totalTokensAllocated = totalAllocated * 700;
                     const uniqueBuyers = stats.uniqueBuyers || 0;
                     
-                    // Calculate percentage of TOTAL supply (creates FOMO)
-                    const percentAllocated = ((totalAllocated / TOTAL_SUPPLY_BATCHES) * 100).toFixed(2);
+                    // Calculate percentage of PUBLIC supply sold (accurate representation)
+                    const percentSold = ((publicSoldBatches / PUBLIC_BATCHES) * 100).toFixed(2);
                     
                     // Show warning if almost sold out
                     if (publicRemaining > 0 && publicRemaining <= 1000) {
@@ -2299,8 +2350,8 @@
                         }
                     } else {
                         // Update DOM with clean numbers (including pre-allocated)
-                        document.getElementById('progressText').textContent = percentAllocated + '% SOLD';
-                        document.getElementById('progressBar').style.width = percentAllocated + '%';
+                        document.getElementById('progressText').textContent = percentSold + '% SOLD';
+                        document.getElementById('progressBar').style.width = percentSold + '%';
                         document.getElementById('progressBar').style.background = 'var(--yellow)';
                     }
                     

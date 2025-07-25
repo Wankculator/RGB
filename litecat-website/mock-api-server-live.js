@@ -103,13 +103,20 @@ const server = http.createServer((req, res) => {
           return;
         }
 
-        // Validate tier limits
+        // CRITICAL: Check if tier is provided - mint is LOCKED without game play
+        if (!data.tier) {
+          res.writeHead(400, corsHeaders);
+          res.end(JSON.stringify({ success: false, error: 'Mint is locked! You must play the game to unlock purchasing. Score 11+ for Bronze tier.' }));
+          return;
+        }
+
+        // Validate tier limits - UPDATED VALUES
         const tierLimits = {
-          bronze: 5,
-          silver: 8,
-          gold: 10
+          bronze: 10,   // Updated from 5
+          silver: 20,   // Updated from 8
+          gold: 30      // Updated from 10
         };
-        const maxBatches = data.tier ? tierLimits[data.tier.toLowerCase()] : 5;
+        const maxBatches = tierLimits[data.tier.toLowerCase()] || 0;
         if (batchCount > maxBatches) {
           res.writeHead(400, corsHeaders);
           res.end(JSON.stringify({ success: false, error: `Maximum ${maxBatches} batches allowed${data.tier ? ' for ' + data.tier + ' tier' : ''}` }));

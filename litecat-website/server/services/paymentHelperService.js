@@ -72,14 +72,14 @@ class PaymentHelperService {
     return null;
   }
 
-  // Get max batches for tier
+  // Get max batches for tier - CRITICAL: Mint is LOCKED
   getMaxBatchesForTier(tier) {
     const tierLimits = {
-      bronze: 5,
-      silver: 8,
-      gold: 10
+      bronze: 10,   // 10 batches for bronze
+      silver: 20,   // 20 batches for silver
+      gold: 30      // 30 batches for gold
     };
-    return tierLimits[tier?.toLowerCase()] || 5;
+    return tierLimits[tier?.toLowerCase()] || 0; // 0 without tier - mint LOCKED
   }
 
   // Generate mock Lightning invoice
@@ -155,6 +155,34 @@ class PaymentHelperService {
     if (amount < 100000) return 3;     // < 0.001 BTC
     if (amount < 1000000) return 6;    // < 0.01 BTC
     return 12;                          // >= 0.01 BTC
+  }
+
+  // Calculate total amount in sats
+  calculateAmount(batchCount) {
+    return batchCount * this.PRICE_PER_BATCH_SATS;
+  }
+
+  // Validate batch count
+  validateBatchCount(batchCount) {
+    return batchCount >= 1 && batchCount <= 10 && Number.isInteger(batchCount);
+  }
+
+  // Generate invoice description
+  generateDescription(batchCount) {
+    const tokens = batchCount * this.TOKENS_PER_BATCH;
+    return `LIGHTCAT Token Purchase: ${batchCount} batch${batchCount > 1 ? 'es' : ''} (${tokens.toLocaleString()} tokens)`;
+  }
+
+  // Get status message
+  getStatusMessage(status) {
+    const messages = {
+      pending: 'Waiting for payment...',
+      paid: 'Payment received! Generating consignment...',
+      delivered: 'Tokens delivered successfully!',
+      expired: 'Invoice expired. Please create a new one.',
+      failed: 'Payment failed. Please try again.'
+    };
+    return messages[status] || 'Unknown status';
   }
 }
 

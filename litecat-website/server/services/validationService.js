@@ -35,12 +35,12 @@ class ValidationService {
       return { isValid: false, error: 'Minimum 1 batch required' };
     }
 
-    // Tier-based limits
+    // Tier-based limits - CRITICAL: Mint is LOCKED without tier
     const limits = {
-      bronze: 5,
-      silver: 8,
-      gold: 10,
-      default: 5
+      bronze: 10,   // Bronze: 10 batches
+      silver: 20,   // Silver: 20 batches
+      gold: 30,     // Gold: 30 batches
+      default: 0    // NO purchases without tier - mint is LOCKED
     };
 
     const maxBatches = tier ? limits[tier.toLowerCase()] : limits.default;
