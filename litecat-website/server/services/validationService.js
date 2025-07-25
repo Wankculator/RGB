@@ -8,9 +8,9 @@ class ValidationService {
       return { isValid: false, error: 'RGB invoice is required' };
     }
 
-    // Check basic format
-    if (!rgbInvoice.startsWith('rgb:') && !rgbInvoice.includes('utxob:')) {
-      return { isValid: false, error: 'Invalid RGB invoice format' };
+    // Check basic format - invoice must start with 'rgb:' and contain 'utxob:'
+    if (!rgbInvoice.startsWith('rgb:') || !rgbInvoice.includes('utxob:')) {
+      return { isValid: false, error: 'Invalid RGB invoice format. Must start with "rgb:" and contain "utxob:"' };
     }
 
     // Additional validation rules

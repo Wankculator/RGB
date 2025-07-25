@@ -1,0 +1,90 @@
+/* Ultimate Mobile Fix for LIGHTCAT - Ensures LIVE MINT STATUS is visible */
+@media screen and (max-width: 768px) {
+    /* Fix header positioning */
+    header {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 9999 !important;
+        max-height: 80px !important;
+        background: rgba(0, 0, 0, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+    }
+    
+    /* Add padding to body to account for fixed header */
+    body {
+        padding-top: 80px !important;
+    }
+    
+    /* Push stats section down significantly to ensure visibility */
+    .stats-section {
+        padding-top: 300px !important;
+        margin-top: 0 !important;
+        background: #000 !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+    
+    /* Ensure section title is visible */
+    .stats-section .section-title {
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        font-size: 2rem !important;
+        color: #FFD700 !important;
+        text-align: center !important;
+        margin-bottom: 2rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 2px !important;
+    }
+    
+    /* Ensure progress text is visible */
+    #progressText {
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        font-size: 1.1rem !important;
+        color: #fff !important;
+        text-align: center !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Fix stat cards layout */
+    .stats-container {
+        padding: 1rem !important;
+    }
+    
+    .stat-card {
+        margin-bottom: 1rem !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 215, 0, 0.3) !important;
+        padding: 1.5rem !important;
+    }
+    
+    /* Ensure everything else flows properly */
+    .hero-section {
+        min-height: auto !important;
+        padding-bottom: 2rem !important;
+    }
+    
+    /* Fix any overlapping issues */
+    * {
+        position: relative !important;
+    }
+    
+    header, header * {
+        position: fixed !important;
+    }
+}
+
+/* Additional mobile optimizations */
+@media screen and (max-width: 480px) {
+    .stats-section {
+        padding-top: 320px !important;
+    }
+    
+    .stats-section .section-title {
+        font-size: 1.5rem !important;
+    }
+}

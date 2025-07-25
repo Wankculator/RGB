@@ -55,6 +55,11 @@ app.post('/api/rgb/invoice', async (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
   
+  // Validate RGB invoice format
+  if (!rgbInvoice.startsWith('rgb:') || !rgbInvoice.includes('utxob:')) {
+    return res.status(400).json({ error: 'Invalid RGB invoice format. Must start with "rgb:" and contain "utxob:"' });
+  }
+  
   const amount = batchCount * 2000; // 2000 sats per batch
   const invoiceId = 'inv_' + Date.now();
   

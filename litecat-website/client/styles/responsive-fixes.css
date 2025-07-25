@@ -50,6 +50,29 @@
     }
 }
 
+/* Mint Status Mobile Visibility Fix */
+@media (max-width: 768px) {
+    .stats-section {
+        position: relative;
+        z-index: 10;
+    }
+    
+    .mint-status-text {
+        position: relative;
+        z-index: 15;
+        background: var(--black);
+        padding: 10px 20px;
+        border-radius: 10px;
+        display: inline-block;
+    }
+    
+    .section-title {
+        position: relative;
+        z-index: 15;
+        margin-bottom: 20px !important;
+    }
+}
+
 /* Touch Target Fixes */
 .btn,
 .modal-content button,
@@ -96,6 +119,33 @@ input[type="email"],
         width: 40px !important;
         height: 40px !important;
         font-size: 1.2rem !important;
+    }
+}
+
+/* Header Mobile Fixes */
+@media (max-width: 768px) {
+    header {
+        max-height: 140px;
+        overflow: hidden;
+    }
+    
+    .header-content {
+        padding: 15px 10px !important;
+    }
+    
+    .logo-section {
+        margin-bottom: 10px !important;
+        gap: 10px !important;
+    }
+    
+    .site-title {
+        font-size: 1.5rem !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .tagline {
+        font-size: 0.75rem !important;
+        margin-top: 2px !important;
     }
 }
 

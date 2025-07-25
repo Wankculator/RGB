@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Header Test - RGBLightCat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+        }
+        .test-results {
+            background: #111;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ffff00;
+        }
+        .test-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: #222;
+            border-radius: 5px;
+        }
+        .pass { color: #4CAF50; }
+        .fail { color: #f44336; }
+        .warning { color: #ff9800; }
+        button {
+            background: #ffff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mobile Header Overlap Test</h1>
+    
+    <div class="test-results" id="testResults">
+        <h2>Test Results:</h2>
+        <div id="results"></div>
+    </div>
+
+    <div>
+        <button onclick="testMobileView()">Test Mobile View</button>
+        <button onclick="testWithScroll()">Test With Scroll</button>
+        <button onclick="openSiteInNewTab()">Open Site</button>
+    </div>
+
+    <script>
+        function testMobileView() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing mobile header overlap...</p>';
+            
+            // Create iframe to test
+            const iframe = document.createElement('iframe');
+            iframe.src = 'https://rgblightcat.com';
+            iframe.style.width = '375px';
+            iframe.style.height = '667px';
+            iframe.style.border = '1px solid #ffff00';
+            iframe.style.display = 'block';
+            iframe.style.margin = '20px auto';
+            
+            iframe.onload = function() {
+                setTimeout(() => {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        const header = iframeDoc.getElementById('header');
+                        const statsSection = iframeDoc.getElementById('stats');
+                        const mintStatusText = iframeDoc.querySelector('.mint-status-text');
+                        
+                        let html = '<h3>Mobile View Test Results:</h3>';
+                        
+                        if (header) {
+                            const headerHeight = header.offsetHeight;
+                            const headerRect = header.getBoundingClientRect();
+                            html += `<div class="test-item">
+                                <strong>Header Height:</strong> ${headerHeight}px
+                                <br><strong>Header Position:</strong> ${window.getComputedStyle(header).position}
+                                <br><strong>Header Z-Index:</strong> ${window.getComputedStyle(header).zIndex}
+                            </div>`;
+                        }
+                        
+                        if (statsSection) {
+                            const statsPadding = window.getComputedStyle(statsSection).paddingTop;
+                            const statsRect = statsSection.getBoundingClientRect();
+                            html += `<div class="test-item">
+                                <strong>Stats Section Padding-Top:</strong> ${statsPadding}
+                                <br><strong>Stats Section Top Position:</strong> ${statsRect.top}px
+                            </div>`;
+                        }
+                        
+                        if (mintStatusText) {
+                            const mintRect = mintStatusText.getBoundingClientRect();
+                            const isVisible = mintRect.top > (header ? header.offsetHeight : 0);
+                            html += `<div class="test-item ${isVisible ? 'pass' : 'fail'}">
+                                <strong>Mint Status Text Position:</strong> ${mintRect.top}px
+                                <br><strong>Is Visible:</strong> ${isVisible ? 'YES ✓' : 'NO ✗'}
+                                <br><strong>Text Content:</strong> "${mintStatusText.textContent}"
+                            </div>`;
+                        }
+                        
+                        // Check for overlap
+                        if (header && mintStatusText) {
+                            const headerBottom = header.getBoundingClientRect().bottom;
+                            const mintTop = mintStatusText.getBoundingClientRect().top;
+                            const overlap = headerBottom > mintTop;
+                            
+                            html += `<div class="test-item ${overlap ? 'fail' : 'pass'}">
+                                <strong>Overlap Detected:</strong> ${overlap ? 'YES - ISSUE FOUND!' : 'NO - All Clear'}
+                                <br><strong>Header Bottom:</strong> ${headerBottom}px
+                                <br><strong>Mint Text Top:</strong> ${mintTop}px
+                                <br><strong>Gap:</strong> ${mintTop - headerBottom}px
+                            </div>`;
+                        }
+                        
+                        results.innerHTML = html;
+                    } catch (e) {
+                        results.innerHTML = '<p class="warning">Cannot access iframe content due to CORS policy. Please test directly on the site.</p>';
+                    }
+                }, 2000);
+            };
+            
+            document.body.appendChild(iframe);
+        }
+        
+        function testWithScroll() {
+            window.open('https://rgblightcat.com#stats', '_blank');
+            alert('Site opened in new tab. Check if "LIVE MINT STATUS" text is visible on mobile view (375px width).');
+        }
+        
+        function openSiteInNewTab() {
+            window.open('https://rgblightcat.com', '_blank');
+        }
+    </script>
+</body>
+</html>
