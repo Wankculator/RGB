@@ -1,13 +1,104 @@
-/* LIGHTCAT Mobile Optimized - Single Source of Truth */
 
-/* Override inline styles for mobile */
+/* MOBILE OVERRIDE - MAXIMUM PRIORITY */
 @media screen and (max-width: 768px) {
-    /* CRITICAL: Force override inline header styles */
-    header[style] {
-        background: #000000 !important;
-        background-color: #000000 !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
+    /* Force ALL text to be visible */
+    * {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Specific fixes for problem elements */
+    h1, h2, h3, h4, h5, h6,
+    .section-title,
+    .mint-status-text,
+    .stat-card,
+    .stat-card h3,
+    .stat-card p,
+    #stats h2,
+    #stats .section-title,
+    section h2,
+    section .section-title,
+    .hero-subtitle,
+    .progress-bar,
+    .progress-fill,
+    .progress-text {
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: block !important;
+        transform: none !important;
+        animation: none !important;
+        color: inherit !important;
+    }
+    
+    /* Fix LIVE MINT STATUS specifically */
+    #stats > .container > h2:first-of-type,
+    #stats > .container > .section-title,
+    h2:contains("LIVE MINT STATUS") {
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: block !important;
+        color: #FFD700 !important;
+        font-size: 2rem !important;
+        margin-bottom: 2rem !important;
+        text-align: center !important;
+    }
+    
+    /* Fix header */
+    header {
+        background: #000 !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 9999 !important;
+    }
+    
+    /* Fix hero spacing */
+    .hero {
+        padding-top: 80px !important;
+        min-height: auto !important;
+    }
+    
+    /* Fix stat cards */
+    .stat-card {
+        background: rgba(255, 215, 0, 0.1) !important;
+        border: 1px solid #FFD700 !important;
+        padding: 1.5rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Nuclear option - remove ALL animations on mobile */
+    *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* Ultra-specific selectors to override everything */
+body #stats h2.section-title,
+body #stats .section-title,
+body section#stats h2,
+body section#stats .container h2 {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+
+/* LIGHTCAT Mobile Optimized - Clean Replacement */
+
+/* Ensure mobile elements are hidden on desktop */
+@media screen and (min-width: 769px) {
+    .mobile-nav,
+    .mobile-nav-overlay,
+    .mobile-menu-toggle,
+    #mobileNav,
+    #mobileNavOverlay {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        position: absolute !important;
+        left: -9999px !important;
     }
 }
 
@@ -19,537 +110,503 @@
         -webkit-tap-highlight-color: transparent;
     }
     
-    html {
-        font-size: 16px;
-        overflow-x: hidden;
-    }
-    
+    /* Body Setup - Header height + extra space */
     body {
-        padding-top: 100px; /* Account for larger fixed header */
-        overflow-x: hidden;
-        margin: 0;
-        padding-left: 0;
-        padding-right: 0;
+        padding-top: 130px !important;
+        margin: 0 !important;
+        background: #000000 !important;
     }
     
-    /* Hide desktop elements */
+    /* Hide Desktop Elements */
     #three-canvas,
     .lightning-rain {
-        display: none;
+        display: none !important;
     }
     
-    /* Override any transparent backgrounds on header */
-    header,
-    header *,
-    .header-content,
-    .logo-section {
+    /* Hide any white elements that might be showing */
+    .mobile-nav:not(.open) {
+        display: none !important;
+    }
+    
+    /* ===== HEADER - 100px height ===== */
+    header {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: 100px !important;
+        min-height: 100px !important;
+        max-height: 100px !important;
         background: #000000 !important;
-        background-color: #000000 !important;
+        z-index: 9999 !important;
+        border-bottom: 1px solid rgba(255, 255, 0, 0.2) !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+    }
+    
+    /* Prevent header scroll effects on mobile */
+    header.scrolled {
+        padding: 0 !important;
+        height: 100px !important;
+        min-height: 100px !important;
+        max-height: 100px !important;
+        background: #000000 !important;
+    }
+    
+    /* Container */
+    .container {
+        padding: 0 15px !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+    
+    /* Header Content - Centered */
+    .header-content {
+        height: 100px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: relative !important;
+    }
+    
+    /* Logo Section - Vertical Stack */
+    .logo-section {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        gap: 5px !important;
+    }
+    
+    /* Logo Image */
+    .logo {
+        width: 40px !important;
+        height: 40px !important;
+        display: block !important;
+        object-fit: contain !important;
+        border: none !important;
+        margin: 0 !important;
+    }
+    
+    /* Text Container */
+    .logo-section > div {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 3px !important;
+    }
+    
+    /* LIGHTCAT Title */
+    .site-title {
+        color: #FFFF00 !important;
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 2px !important;
+        text-transform: uppercase !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+    }
+    
+    /* Tagline */
+    .tagline {
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-size: 0.65rem !important;
+        font-weight: 400 !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+    
+    /* Hide Desktop Nav */
+    nav {
+        display: none !important;
+    }
+    
+    /* Mobile Menu Button */
+    .mobile-menu-toggle {
+        position: absolute !important;
+        right: 15px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        gap: 3px !important;
+        background: none !important;
+        border: none !important;
+        padding: 10px !important;
+        width: 44px !important;
+        height: 44px !important;
+    }
+    
+    .mobile-menu-toggle span {
+        display: block !important;
+        width: 22px !important;
+        height: 2px !important;
+        background: #FFFF00 !important;
+    }
+    
+    /* ===== SECTIONS ===== */
+    section {
+        padding: 30px 0 !important;
+        background: #000000 !important;
+    }
+    
+    /* Give first section extra top margin */
+    section:first-of-type,
+    #stats {
+        margin-top: 0 !important;
+    }
+    
+    /* Override initial animation states on mobile */
+    .section-title,
+    .mint-status-text,
+    .stat-card,
+    .tier-card,
+    .purchase-form {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+        visibility: visible !important;
+    }
+    
+    /* Extra specificity for LIVE MINT STATUS title */
+    body section#stats .container h2.section-title,
+    body section .container h2.section-title,
+    h2.section-title {
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: block !important;
+        transform: none !important;
+        position: relative !important;
+        z-index: 100 !important;
+    }
+    
+    /* Disable all animations on mobile for immediate visibility */
+    * {
+        animation-delay: 0s !important;
+        animation-duration: 0s !important;
+        transition-duration: 0s !important;
+    }
+    
+    .section-title {
+        font-size: 1.6rem !important;
+        margin-bottom: 20px !important;
+        text-align: center !important;
+        color: #FFFF00 !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 2px !important;
+    }
+    
+    /* Ensure LIVE MINT STATUS title is visible */
+    #stats .section-title {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        margin-top: 0 !important;
+        margin-bottom: 15px !important;
+        padding-top: 0 !important;
+        position: relative !important;
+        z-index: 10 !important;
+    }
+    
+    /* Remove decorative line on mobile */
+    .section-title::after {
+        display: none !important;
+    }
+    
+    /* Ultra-specific rule for the title */
+    body section#stats .container > h2.section-title:first-child {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: 100 !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        color: #FFFF00 !important;
+        font-size: 1.6rem !important;
+    }
+    
+    
+    /* Stats Section - Override JavaScript dynamic padding */
+    .stats-section {
+        padding-top: 30px !important;
+        margin-top: 0 !important;
+        position: relative !important;
+        z-index: 1 !important;
+        background: #000000 !important;
+        display: block !important;
+        visibility: visible !important;
+    }
+    
+    /* Force stats section padding with ID selector for higher specificity */
+    #stats.stats-section {
+        padding-top: 30px !important;
+        margin-top: 20px !important;
+    }
+    
+    /* Override any inline styles from JavaScript */
+    #stats[style] {
+        padding-top: 30px !important;
+    }
+    
+    /* Ultimate override for stats section padding - maximum specificity */
+    body #stats.stats-section[id="stats"] {
+        padding-top: 30px !important;
+        margin-top: 20px !important;
+    }
+    
+    /* Ensure the container doesn't add extra space */
+    #stats .container {
+        padding-top: 0 !important;
+    }
+    
+    .mint-status-text {
+        font-size: 1.4rem !important;
+        text-align: center !important;
+        margin-bottom: 20px !important;
+        color: #FFFF00 !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Progress Bar */
+    .progress-container {
+        margin: 0 15px 25px !important;
+        padding: 0 !important;
+    }
+    
+    .progress-bar {
+        height: 30px !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-radius: 15px !important;
+        border: 1px solid rgba(255, 255, 0, 0.3) !important;
+        overflow: hidden !important;
+        position: relative !important;
+    }
+    
+    .progress-bar > div {
+        height: 100% !important;
+        background: linear-gradient(90deg, #FFFF00 0%, #FFD700 100%) !important;
+        border-radius: 14px !important;
+        box-shadow: 0 0 10px rgba(255, 255, 0, 0.5) !important;
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+        padding: 0 15px !important;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 0, 0.2) !important;
+        border-radius: 10px !important;
+        padding: 15px 5px !important;
+        text-align: center !important;
+    }
+    
+    .stat-number {
+        font-size: 1.2rem !important;
+        color: #FFFF00 !important;
+        font-weight: 700 !important;
+        margin-bottom: 5px !important;
+    }
+    
+    /* Large number fix */
+    #totalTokens {
+        font-size: 1rem !important;
+        letter-spacing: -0.5px !important;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem !important;
+        color: rgba(255, 255, 255, 0.7) !important;
+        text-transform: uppercase !important;
+    }
+    
+    /* Tier Cards */
+    .tier-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+        padding: 0 15px !important;
+    }
+    
+    .tier-card {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 2px solid rgba(255, 255, 0, 0.3) !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 15px !important;
+    }
+    
+    /* Game Section */
+    #gameWrapper {
+        height: 350px !important;
+        margin: 0 15px !important;
+        border-radius: 10px !important;
+        overflow: hidden !important;
+    }
+    
+    /* Purchase Form */
+    .purchase-form {
+        padding: 0 15px !important;
+    }
+    
+    /* Buttons */
+    .btn {
+        min-height: 44px !important;
+        font-size: 1rem !important;
+        padding: 12px 20px !important;
+    }
+    
+    /* Inputs */
+    input[type="text"],
+    input[type="email"],
+    textarea {
+        font-size: 16px !important;
+        padding: 12px !important;
+        min-height: 44px !important;
+    }
+    
+    /* Mobile Nav Drawer */
+    .mobile-nav {
+        position: fixed !important;
+        right: -300px !important;
+        width: 300px !important;
+        max-width: 80% !important;
+        height: 100vh !important;
+        background: #000000 !important;
+        border-left: 2px solid #FFFF00 !important;
+        transition: right 0.3s ease !important;
+        z-index: 10000 !important;
+        top: 0 !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        transition: right 0.3s ease, visibility 0.3s, opacity 0.3s !important;
+    }
+    
+    .mobile-nav.open {
+        right: 0 !important;
+        visibility: visible !important;
         opacity: 1 !important;
     }
     
-    /* ===== HEADER ===== */
-    header {
-        height: auto !important;
-        min-height: 80px !important;
-        width: 100% !important;
-        padding: 10px 0 !important;
-        margin: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        background: #000000 !important;
-        background-color: #000000 !important;
-        background-image: none !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        border: none !important;
-        box-shadow: none !important;
-        position: fixed !important;
-        top: 0 !important;
-        z-index: 9999 !important;
-        /* Force solid black - override desktop transparency */
-        background: rgba(0, 0, 0, 1) !important;
-        /* Ensure content is visible */
-        overflow: visible !important;
-    }
-    
-    /* Full width header container - override desktop styles */
-    header .container {
-        max-width: 100% !important;
-        width: 100% !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        background: #000000 !important;
-    }
-    
-    /* Remove pseudo elements - we'll use a different approach */
-    
-    /* Override all header states to solid black */
-    header,
-    header.scrolled,
-    header:not(.scrolled) {
-        padding: 10px 0 !important;
-        height: auto !important;
-        min-height: 80px !important;
-        background: #000000 !important;
-        background: rgba(0, 0, 0, 1) !important;
-        background-color: #000000 !important;
-        background-image: none !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        box-shadow: none !important;
-    }
-    
-    /* Force black background on header content too */
-    .header-content {
-        background: #000000 !important;
-        background-color: #000000 !important;
-        height: auto !important;
-        min-height: 60px !important;
-        padding: 10px 15px !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
+    /* Mobile Nav Header */
+    .mobile-nav-header {
+        padding: 20px !important;
+        border-bottom: 1px solid rgba(255, 255, 0, 0.2) !important;
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
     }
     
-    /* Force full viewport width for header - use box-shadow to extend black */
-    header {
-        transform: translateX(0) !important;
-        box-shadow: -100vw 0 0 100vw #000000, 100vw 0 0 100vw #000000 !important;
+    /* Mobile Nav Logo - Hide or style properly */
+    .mobile-nav-logo {
+        width: 40px !important;
+        height: 40px !important;
+        object-fit: contain !important;
+        border-radius: 50% !important;
+        background: #000000 !important;
     }
     
-    .logo-section {
-        gap: 10px;
+    /* Mobile Nav Close Button */
+    .mobile-nav-close {
+        background: none !important;
+        border: none !important;
+        color: #FFFF00 !important;
+        font-size: 2rem !important;
+        width: 44px !important;
+        height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+    }
+    
+    /* Mobile Nav Links */
+    .mobile-nav-links {
+        padding: 20px !important;
+    }
+    
+    .mobile-nav-links a {
+        display: block !important;
+        padding: 15px !important;
+        color: #FFFFFF !important;
+        text-decoration: none !important;
+        font-size: 1.1rem !important;
+        border-bottom: 1px solid rgba(255, 255, 0, 0.1) !important;
+        transition: 0.3s !important;
+    }
+    
+    .mobile-nav-links a:hover,
+    .mobile-nav-links a:active {
+        background: rgba(255, 255, 0, 0.1) !important;
+        color: #FFFF00 !important;
+    }
+    
+    .mobile-nav-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(0, 0, 0, 0.7) !important;
+        z-index: 9998 !important;
+        display: none !important;
+    }
+    
+    .mobile-nav-overlay.show {
+        display: block !important;
+    }
+}
+
+/* Small Devices */
+@media screen and (max-width: 360px) {
+    header {
+        height: 90px !important;
+    }
+    
+    body {
+        padding-top: 110px !important;
+    }
+    
+    .header-content {
+        height: 90px !important;
     }
     
     .logo {
-        width: 36px;
-        height: 36px;
+        width: 35px !important;
+        height: 35px !important;
     }
     
     .site-title {
-        font-size: 1.25rem;
-        letter-spacing: 1px;
+        font-size: 1.3rem !important;
     }
     
     .tagline {
-        display: none;
-    }
-    
-    /* Desktop nav hidden */
-    nav {
-        display: none;
-    }
-    
-    /* Mobile menu button */
-    .mobile-menu-toggle {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 3px;
-        padding: 8px;
-        background: none;
-        border: none;
-        cursor: pointer;
-        position: absolute;
-        right: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 1001;
-        -webkit-tap-highlight-color: transparent;
-    }
-    
-    .mobile-menu-toggle span {
-        display: block;
-        width: 22px;
-        height: 2px;
-        background: var(--yellow);
-        transition: 0.3s;
-    }
-    
-    /* ===== SECTIONS ===== */
-    section {
-        padding: 40px 0;
-    }
-    
-    .container {
-        padding: 0 15px;
-    }
-    
-    .section-title {
-        font-size: 2rem;
-        margin-bottom: 30px;
-        letter-spacing: 2px;
-    }
-    
-    .section-title::after {
-        width: 60px;
-        bottom: -8px;
-    }
-    
-    /* ===== STATS SECTION ===== */
-    .stats-section {
-        padding-top: 20px; /* Reduced since body already has padding */
-        padding-bottom: 40px;
-    }
-    
-    .mint-status-text {
-        font-size: 1.5rem;
-        margin-bottom: 20px;
-    }
-    
-    .progress-container {
-        margin: 0 0 30px 0;
-        padding: 15px;
-    }
-    
-    .progress-bar {
-        height: 20px;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-    
-    .stat-card {
-        padding: 20px 10px;
+        font-size: 0.6rem !important;
     }
     
     .stat-number {
-        font-size: 1.5rem;
-        margin-bottom: 5px;
+        font-size: 1rem !important;
     }
     
-    .stat-label {
-        font-size: 0.8rem;
-    }
-    
-    /* ===== GAME SECTION ===== */
-    .game-section {
-        padding: 40px 0;
-    }
-    
-    .game-frame {
-        height: 400px;
-    }
-    
-    /* ===== PURCHASE SECTION ===== */
-    .purchase-section {
-        padding: 40px 0;
-    }
-    
-    .tier-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .tier-card {
-        padding: 25px 20px;
-    }
-    
-    .tier-icon {
-        font-size: 2.5rem;
-    }
-    
-    .tier-name {
-        font-size: 1.3rem;
-    }
-    
-    .purchase-form {
-        padding: 25px 20px;
-        margin-top: 30px;
-    }
-    
-    .batch-selector {
-        gap: 15px;
-        margin: 20px 0;
-    }
-    
-    .batch-btn {
-        width: 44px;
-        height: 44px;
-        font-size: 1.3rem;
-    }
-    
-    #batchAmount {
-        font-size: 1.8rem;
-        padding: 10px;
-        margin: 0 10px;
-        width: 80px;
-    }
-    
-    .form-control {
-        padding: 12px 15px;
-        font-size: 16px; /* Prevents zoom on iOS */
-    }
-    
-    .btn-purchase {
-        padding: 15px;
-        font-size: 1.1rem;
-    }
-    
-    /* ===== FOOTER ===== */
-    footer {
-        padding: 40px 0;
-    }
-    
-    .footer-content {
-        flex-direction: column;
-        gap: 20px;
-        text-align: center;
-    }
-}
-
-/* ===== MOBILE NAVIGATION DRAWER - MOBILE ONLY ===== */
-@media screen and (max-width: 768px) {
-    .mobile-nav {
-        position: fixed;
-        top: 0;
-        right: -300px;
-        width: 300px;
-        height: 100vh;
-        background: #000;
-        border-left: 2px solid var(--yellow);
-        transition: right 0.3s ease;
-        z-index: 10000;
-        overflow-y: auto;
-    }
-
-    .mobile-nav.open {
-        right: 0;
-        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
-    }
-
-    .mobile-nav-header {
-        padding: 20px;
-        border-bottom: 1px solid rgba(255, 255, 0, 0.2);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .mobile-nav-logo {
-        width: 40px;
-        height: 40px;
-    }
-
-    .mobile-nav-close {
-        background: none;
-        border: none;
-        color: var(--yellow);
-        font-size: 2rem;
-        width: 44px;
-        height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-    }
-
-    .mobile-nav-links {
-        padding: 20px;
-    }
-
-    .mobile-nav-links a {
-        display: block;
-        padding: 15px;
-        color: var(--white);
-        text-decoration: none;
-        font-size: 1.1rem;
-        border-bottom: 1px solid rgba(255, 255, 0, 0.1);
-        transition: 0.3s;
-    }
-
-    .mobile-nav-links a:hover,
-    .mobile-nav-links a:active {
-        background: rgba(255, 255, 0, 0.1);
-        color: var(--yellow);
-    }
-
-    /* Quick Select in Mobile Menu */
-    .mobile-quick-select {
-        padding: 20px;
-        border-top: 1px solid rgba(255, 255, 0, 0.2);
-        background: rgba(255, 255, 0, 0.02);
-    }
-
-    .mobile-quick-select h3 {
-        color: var(--yellow);
-        font-size: 1.1rem;
-        margin-bottom: 15px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .quick-select-buttons {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-
-    .quick-select-btn {
-        background: rgba(255, 255, 0, 0.1);
-        border: 1px solid var(--yellow);
-        color: var(--yellow);
-        padding: 12px;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    .quick-select-btn:hover,
-    .quick-select-btn:active {
-        background: var(--yellow);
-        color: var(--black);
-    }
-
-    .mobile-nav-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 9999;
-        visibility: hidden;
-        opacity: 0;
-        transition: all 0.3s;
-    }
-
-    .mobile-nav-overlay.show {
-        visibility: visible;
-        opacity: 1;
-    }
-}
-
-/* Hide mobile elements on desktop */
-@media screen and (min-width: 769px) {
-    .mobile-nav,
-    .mobile-nav-overlay,
-    .mobile-menu-toggle {
-        display: none !important;
-    }
-}
-
-/* ===== SMALL DEVICES: 480px ===== */
-@media screen and (max-width: 480px) {
-    .section-title {
-        font-size: 1.75rem;
-    }
-    
-    .game-frame {
-        height: 350px;
-    }
-    
-    .stat-number {
-        font-size: 1.3rem;
-    }
-    
-    .mint-status-text {
-        font-size: 1.3rem;
-    }
-}
-
-/* ===== EXTRA SMALL DEVICES: 375px ===== */
-@media screen and (max-width: 375px) {
-    .site-title {
-        font-size: 1.1rem;
-    }
-    
-    .section-title {
-        font-size: 1.5rem;
-        letter-spacing: 1px;
-    }
-    
-    .stats-grid {
-        gap: 8px;
-    }
-    
-    .stat-card {
-        padding: 15px 8px;
-    }
-    
-    .stat-number {
-        font-size: 1.2rem;
-    }
-    
-    .stat-label {
-        font-size: 0.75rem;
-    }
-    
-    .container {
-        padding: 0 12px;
-    }
-}
-
-/* ===== TINY DEVICES: 320px ===== */
-@media screen and (max-width: 320px) {
-    .logo {
-        width: 30px;
-        height: 30px;
-    }
-    
-    .site-title {
-        font-size: 1rem;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    
-    .stat-number {
-        font-size: 1.4rem;
-    }
-    
-    .batch-btn {
-        width: 40px;
-        height: 40px;
-    }
-    
-    #batchAmount {
-        width: 70px;
-        font-size: 1.5rem;
-    }
-}
-
-/* ===== LANDSCAPE MODE ===== */
-@media screen and (max-width: 812px) and (orientation: landscape) {
-    .stats-section {
-        padding-top: 70px;
-    }
-    
-    .game-frame {
-        height: 280px;
-    }
-    
-    section {
-        padding: 30px 0;
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-/* ===== IPHONE NOTCH SUPPORT ===== */
-@supports (padding-top: env(safe-area-inset-top)) {
-    @media screen and (max-width: 768px) {
-        header {
-            padding-top: env(safe-area-inset-top);
-        }
-        
-        body {
-            padding-top: calc(60px + env(safe-area-inset-top));
-        }
-        
-        .mobile-nav {
-            padding-top: env(safe-area-inset-top);
-        }
+    #totalTokens {
+        font-size: 0.85rem !important;
     }
 }
