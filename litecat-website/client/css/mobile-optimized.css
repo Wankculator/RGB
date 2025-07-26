@@ -1,23 +1,23 @@
 
-/* MOBILE OVERRIDE - MAXIMUM PRIORITY */
+/* ============================================
+   LIGHTCAT PERFECT MOBILE UI
+   Making mobile look as good as desktop!
+   ============================================ */
+
+/* Global Mobile Reset */
 @media screen and (max-width: 768px) {
-    /* Force ALL text to be visible */
+    /* Force visibility on EVERYTHING */
     * {
-        opacity: 1 !important;
-        visibility: visible !important;
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
     }
     
-    /* Specific fixes for problem elements */
+    /* Critical visibility fixes */
     h1, h2, h3, h4, h5, h6,
+    p, span, div, section,
     .section-title,
     .mint-status-text,
     .stat-card,
-    .stat-card h3,
-    .stat-card p,
-    #stats h2,
-    #stats .section-title,
-    section h2,
-    section .section-title,
     .hero-subtitle,
     .progress-bar,
     .progress-fill,
@@ -27,586 +27,514 @@
         display: block !important;
         transform: none !important;
         animation: none !important;
-        color: inherit !important;
+    }
+}
+
+/* ============================================
+   MOBILE HEADER - EXACTLY LIKE DESKTOP
+   ============================================ */
+@media screen and (max-width: 768px) {
+    header {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        background: #000 !important;
+        border-bottom: 2px solid #FFD700 !important;
+        z-index: 10000 !important;
+        height: 60px !important;
+        display: flex !important;
+        align-items: center !important;
+        padding: 0 15px !important;
     }
     
-    /* Fix LIVE MINT STATUS specifically */
-    #stats > .container > h2:first-of-type,
-    #stats > .container > .section-title,
-    h2:contains("LIVE MINT STATUS") {
+    .header-content {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+    
+    .site-title {
+        font-size: 1.5rem !important;
+        color: #FFD700 !important;
+        font-weight: bold !important;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5) !important;
+        margin: 0 !important;
+    }
+    
+    /* Hide desktop nav, show mobile toggle */
+    nav:not(.mobile-nav) {
+        display: none !important;
+    }
+    
+    .mobile-menu-toggle {
+        display: block !important;
+        background: transparent !important;
+        border: 2px solid #FFD700 !important;
+        color: #FFD700 !important;
+        padding: 8px 12px !important;
+        border-radius: 5px !important;
+        font-size: 1.2rem !important;
+    }
+}
+
+/* ============================================
+   HERO SECTION - MOBILE OPTIMIZED
+   ============================================ */
+@media screen and (max-width: 768px) {
+    .hero {
+        min-height: 100vh !important;
+        padding: 80px 20px 40px !important;
+        background: radial-gradient(ellipse at center, #1a1a1a 0%, #000 100%) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }
+    
+    .hero-content {
+        width: 100% !important;
+        max-width: 500px !important;
+    }
+    
+    .hero h1 {
+        font-size: 2.5rem !important;
+        color: #FFD700 !important;
+        margin-bottom: 1rem !important;
+        text-shadow: 0 0 30px rgba(255, 215, 0, 0.8) !important;
+        font-weight: bold !important;
+        line-height: 1.2 !important;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.1rem !important;
+        color: #FFA500 !important;
+        margin-bottom: 2rem !important;
         opacity: 1 !important;
         visibility: visible !important;
+    }
+    
+    .cta-button {
+        display: inline-block !important;
+        background: linear-gradient(45deg, #FFD700, #FFA500) !important;
+        color: #000 !important;
+        padding: 15px 30px !important;
+        border-radius: 50px !important;
+        font-size: 1.1rem !important;
+        font-weight: bold !important;
+        text-decoration: none !important;
+        box-shadow: 0 4px 20px rgba(255, 215, 0, 0.5) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .cta-button:active {
+        transform: scale(0.95) !important;
+        box-shadow: 0 2px 10px rgba(255, 215, 0, 0.5) !important;
+    }
+}
+
+/* ============================================
+   STATS SECTION - PERFECT VISIBILITY
+   ============================================ */
+@media screen and (max-width: 768px) {
+    #stats {
+        background: #000 !important;
+        padding: 60px 20px !important;
+        position: relative !important;
+    }
+    
+    /* LIVE MINT STATUS - GUARANTEED VISIBLE */
+    #stats h2,
+    #stats .section-title,
+    .section-title:contains("LIVE MINT STATUS") {
         display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
         color: #FFD700 !important;
         font-size: 2rem !important;
+        text-align: center !important;
         margin-bottom: 2rem !important;
-        text-align: center !important;
-    }
-    
-    /* Fix header */
-    header {
-        background: #000 !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        z-index: 9999 !important;
-    }
-    
-    /* Fix hero spacing */
-    .hero {
-        padding-top: 80px !important;
-        min-height: auto !important;
-    }
-    
-    /* Fix stat cards */
-    .stat-card {
-        background: rgba(255, 215, 0, 0.1) !important;
-        border: 1px solid #FFD700 !important;
-        padding: 1.5rem !important;
-        margin-bottom: 1rem !important;
-    }
-    
-    /* Nuclear option - remove ALL animations on mobile */
-    *, *::before, *::after {
-        animation: none !important;
-        transition: none !important;
-    }
-}
-
-/* Ultra-specific selectors to override everything */
-body #stats h2.section-title,
-body #stats .section-title,
-body section#stats h2,
-body section#stats .container h2 {
-    opacity: 1 !important;
-    visibility: visible !important;
-}
-
-
-/* LIGHTCAT Mobile Optimized - Clean Replacement */
-
-/* Ensure mobile elements are hidden on desktop */
-@media screen and (min-width: 769px) {
-    .mobile-nav,
-    .mobile-nav-overlay,
-    .mobile-menu-toggle,
-    #mobileNav,
-    #mobileNavOverlay {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        position: absolute !important;
-        left: -9999px !important;
-    }
-}
-
-/* ===== MOBILE BREAKPOINT: 768px ===== */
-@media screen and (max-width: 768px) {
-    
-    /* Reset and Base */
-    * {
-        -webkit-tap-highlight-color: transparent;
-    }
-    
-    /* Body Setup - Header height + extra space */
-    body {
-        padding-top: 130px !important;
-        margin: 0 !important;
-        background: #000000 !important;
-    }
-    
-    /* Hide Desktop Elements */
-    #three-canvas,
-    .lightning-rain {
-        display: none !important;
-    }
-    
-    /* Hide any white elements that might be showing */
-    .mobile-nav:not(.open) {
-        display: none !important;
-    }
-    
-    /* ===== HEADER - 100px height ===== */
-    header {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        width: 100% !important;
-        height: 100px !important;
-        min-height: 100px !important;
-        max-height: 100px !important;
-        background: #000000 !important;
-        z-index: 9999 !important;
-        border-bottom: 1px solid rgba(255, 255, 0, 0.2) !important;
-        overflow: hidden !important;
-        padding: 0 !important;
-    }
-    
-    /* Prevent header scroll effects on mobile */
-    header.scrolled {
-        padding: 0 !important;
-        height: 100px !important;
-        min-height: 100px !important;
-        max-height: 100px !important;
-        background: #000000 !important;
-    }
-    
-    /* Container */
-    .container {
-        padding: 0 15px !important;
-        margin: 0 !important;
-        max-width: 100% !important;
-    }
-    
-    /* Header Content - Centered */
-    .header-content {
-        height: 100px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        position: relative !important;
-    }
-    
-    /* Logo Section - Vertical Stack */
-    .logo-section {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        text-align: center !important;
-        gap: 5px !important;
-    }
-    
-    /* Logo Image */
-    .logo {
-        width: 40px !important;
-        height: 40px !important;
-        display: block !important;
-        object-fit: contain !important;
-        border: none !important;
-        margin: 0 !important;
-    }
-    
-    /* Text Container */
-    .logo-section > div {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 3px !important;
-    }
-    
-    /* LIGHTCAT Title */
-    .site-title {
-        color: #FFFF00 !important;
-        font-size: 1.5rem !important;
-        font-weight: 700 !important;
-        letter-spacing: 2px !important;
-        text-transform: uppercase !important;
-        margin: 0 !important;
-        line-height: 1 !important;
-    }
-    
-    /* Tagline */
-    .tagline {
-        color: rgba(255, 255, 255, 0.7) !important;
-        font-size: 0.65rem !important;
-        font-weight: 400 !important;
-        margin: 0 !important;
-        line-height: 1 !important;
-        white-space: nowrap !important;
-    }
-    
-    /* Hide Desktop Nav */
-    nav {
-        display: none !important;
-    }
-    
-    /* Mobile Menu Button */
-    .mobile-menu-toggle {
-        position: absolute !important;
-        right: 15px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        gap: 3px !important;
-        background: none !important;
-        border: none !important;
-        padding: 10px !important;
-        width: 44px !important;
-        height: 44px !important;
-    }
-    
-    .mobile-menu-toggle span {
-        display: block !important;
-        width: 22px !important;
-        height: 2px !important;
-        background: #FFFF00 !important;
-    }
-    
-    /* ===== SECTIONS ===== */
-    section {
-        padding: 30px 0 !important;
-        background: #000000 !important;
-    }
-    
-    /* Give first section extra top margin */
-    section:first-of-type,
-    #stats {
-        margin-top: 0 !important;
-    }
-    
-    /* Override initial animation states on mobile */
-    .section-title,
-    .mint-status-text,
-    .stat-card,
-    .tier-card,
-    .purchase-form {
-        opacity: 1 !important;
-        transform: none !important;
-        animation: none !important;
-        visibility: visible !important;
-    }
-    
-    /* Extra specificity for LIVE MINT STATUS title */
-    body section#stats .container h2.section-title,
-    body section .container h2.section-title,
-    h2.section-title {
-        opacity: 1 !important;
-        visibility: visible !important;
-        display: block !important;
-        transform: none !important;
-        position: relative !important;
-        z-index: 100 !important;
-    }
-    
-    /* Disable all animations on mobile for immediate visibility */
-    * {
-        animation-delay: 0s !important;
-        animation-duration: 0s !important;
-        transition-duration: 0s !important;
-    }
-    
-    .section-title {
-        font-size: 1.6rem !important;
-        margin-bottom: 20px !important;
-        text-align: center !important;
-        color: #FFFF00 !important;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        font-weight: 700 !important;
+        font-weight: bold !important;
         text-transform: uppercase !important;
         letter-spacing: 2px !important;
-    }
-    
-    /* Ensure LIVE MINT STATUS title is visible */
-    #stats .section-title {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        margin-top: 0 !important;
-        margin-bottom: 15px !important;
-        padding-top: 0 !important;
+        text-shadow: 0 0 20px rgba(255, 215, 0, 0.8) !important;
+        transform: none !important;
+        animation: none !important;
         position: relative !important;
         z-index: 10 !important;
     }
     
-    /* Remove decorative line on mobile */
-    .section-title::after {
-        display: none !important;
-    }
-    
-    /* Ultra-specific rule for the title */
-    body section#stats .container > h2.section-title:first-child {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        position: relative !important;
-        z-index: 100 !important;
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-        color: #FFFF00 !important;
-        font-size: 1.6rem !important;
-    }
-    
-    
-    /* Stats Section - Override JavaScript dynamic padding */
-    .stats-section {
-        padding-top: 30px !important;
-        margin-top: 0 !important;
-        position: relative !important;
-        z-index: 1 !important;
-        background: #000000 !important;
-        display: block !important;
-        visibility: visible !important;
-    }
-    
-    /* Force stats section padding with ID selector for higher specificity */
-    #stats.stats-section {
-        padding-top: 30px !important;
-        margin-top: 20px !important;
-    }
-    
-    /* Override any inline styles from JavaScript */
-    #stats[style] {
-        padding-top: 30px !important;
-    }
-    
-    /* Ultimate override for stats section padding - maximum specificity */
-    body #stats.stats-section[id="stats"] {
-        padding-top: 30px !important;
-        margin-top: 20px !important;
-    }
-    
-    /* Ensure the container doesn't add extra space */
-    #stats .container {
-        padding-top: 0 !important;
-    }
-    
-    .mint-status-text {
-        font-size: 1.4rem !important;
-        text-align: center !important;
-        margin-bottom: 20px !important;
-        color: #FFFF00 !important;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        font-weight: 600 !important;
-    }
-    
-    /* Progress Bar */
+    /* Progress bar container */
     .progress-container {
-        margin: 0 15px 25px !important;
-        padding: 0 !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-radius: 20px !important;
+        padding: 4px !important;
+        margin-bottom: 3rem !important;
+        box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5) !important;
     }
     
     .progress-bar {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-radius: 16px !important;
         height: 30px !important;
-        background: rgba(255, 255, 255, 0.1) !important;
-        border-radius: 15px !important;
-        border: 1px solid rgba(255, 255, 0, 0.3) !important;
-        overflow: hidden !important;
         position: relative !important;
+        overflow: hidden !important;
+        opacity: 1 !important;
+        visibility: visible !important;
     }
     
-    .progress-bar > div {
+    .progress-fill {
+        background: linear-gradient(90deg, #FFD700, #FFA500) !important;
         height: 100% !important;
-        background: linear-gradient(90deg, #FFFF00 0%, #FFD700 100%) !important;
-        border-radius: 14px !important;
-        box-shadow: 0 0 10px rgba(255, 255, 0, 0.5) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.5) !important;
+        transition: width 0.5s ease !important;
+        opacity: 1 !important;
+        visibility: visible !important;
     }
     
-    /* Stats Grid */
+    .progress-text {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        color: #fff !important;
+        font-weight: bold !important;
+        font-size: 0.9rem !important;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Stat cards grid */
     .stats-grid {
         display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 10px !important;
-        padding: 0 15px !important;
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+        margin-top: 2rem !important;
     }
     
     .stat-card {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 0, 0.2) !important;
-        border-radius: 10px !important;
-        padding: 15px 5px !important;
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.05)) !important;
+        border: 2px solid #FFD700 !important;
+        border-radius: 15px !important;
+        padding: 20px !important;
         text-align: center !important;
-    }
-    
-    .stat-number {
-        font-size: 1.2rem !important;
-        color: #FFFF00 !important;
-        font-weight: 700 !important;
-        margin-bottom: 5px !important;
-    }
-    
-    /* Large number fix */
-    #totalTokens {
-        font-size: 1rem !important;
-        letter-spacing: -0.5px !important;
-    }
-    
-    .stat-label {
-        font-size: 0.7rem !important;
-        color: rgba(255, 255, 255, 0.7) !important;
-        text-transform: uppercase !important;
-    }
-    
-    /* Tier Cards */
-    .tier-grid {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 15px !important;
-        padding: 0 15px !important;
-    }
-    
-    .tier-card {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 2px solid rgba(255, 255, 0, 0.3) !important;
-        border-radius: 12px !important;
-        padding: 20px !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 15px !important;
-    }
-    
-    /* Game Section */
-    #gameWrapper {
-        height: 350px !important;
-        margin: 0 15px !important;
-        border-radius: 10px !important;
+        position: relative !important;
         overflow: hidden !important;
-    }
-    
-    /* Purchase Form */
-    .purchase-form {
-        padding: 0 15px !important;
-    }
-    
-    /* Buttons */
-    .btn {
-        min-height: 44px !important;
-        font-size: 1rem !important;
-        padding: 12px 20px !important;
-    }
-    
-    /* Inputs */
-    input[type="text"],
-    input[type="email"],
-    textarea {
-        font-size: 16px !important;
-        padding: 12px !important;
-        min-height: 44px !important;
-    }
-    
-    /* Mobile Nav Drawer */
-    .mobile-nav {
-        position: fixed !important;
-        right: -300px !important;
-        width: 300px !important;
-        max-width: 80% !important;
-        height: 100vh !important;
-        background: #000000 !important;
-        border-left: 2px solid #FFFF00 !important;
-        transition: right 0.3s ease !important;
-        z-index: 10000 !important;
-        top: 0 !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        transition: right 0.3s ease, visibility 0.3s, opacity 0.3s !important;
-    }
-    
-    .mobile-nav.open {
-        right: 0 !important;
-        visibility: visible !important;
         opacity: 1 !important;
+        visibility: visible !important;
+        display: block !important;
+        box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2) !important;
     }
     
-    /* Mobile Nav Header */
-    .mobile-nav-header {
-        padding: 20px !important;
-        border-bottom: 1px solid rgba(255, 255, 0, 0.2) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
+    .stat-card::before {
+        content: '' !important;
+        position: absolute !important;
+        top: -50% !important;
+        left: -50% !important;
+        width: 200% !important;
+        height: 200% !important;
+        background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%) !important;
+        animation: pulse 3s ease-in-out infinite !important;
     }
     
-    /* Mobile Nav Logo - Hide or style properly */
-    .mobile-nav-logo {
-        width: 40px !important;
-        height: 40px !important;
-        object-fit: contain !important;
-        border-radius: 50% !important;
-        background: #000000 !important;
+    .stat-card h3 {
+        color: #FFD700 !important;
+        font-size: 1.2rem !important;
+        margin-bottom: 10px !important;
+        font-weight: bold !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        position: relative !important;
+        z-index: 1 !important;
     }
     
-    /* Mobile Nav Close Button */
-    .mobile-nav-close {
-        background: none !important;
-        border: none !important;
-        color: #FFFF00 !important;
+    .stat-card .stat-value {
         font-size: 2rem !important;
-        width: 44px !important;
-        height: 44px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        cursor: pointer !important;
+        color: #FFF !important;
+        font-weight: bold !important;
+        margin-bottom: 5px !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        position: relative !important;
+        z-index: 1 !important;
     }
     
-    /* Mobile Nav Links */
-    .mobile-nav-links {
-        padding: 20px !important;
-    }
-    
-    .mobile-nav-links a {
-        display: block !important;
-        padding: 15px !important;
-        color: #FFFFFF !important;
-        text-decoration: none !important;
-        font-size: 1.1rem !important;
-        border-bottom: 1px solid rgba(255, 255, 0, 0.1) !important;
-        transition: 0.3s !important;
-    }
-    
-    .mobile-nav-links a:hover,
-    .mobile-nav-links a:active {
-        background: rgba(255, 255, 0, 0.1) !important;
-        color: #FFFF00 !important;
-    }
-    
-    .mobile-nav-overlay {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        background: rgba(0, 0, 0, 0.7) !important;
-        z-index: 9998 !important;
-        display: none !important;
-    }
-    
-    .mobile-nav-overlay.show {
-        display: block !important;
+    .stat-card .stat-label {
+        color: #AAA !important;
+        font-size: 0.9rem !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        position: relative !important;
+        z-index: 1 !important;
     }
 }
 
-/* Small Devices */
-@media screen and (max-width: 360px) {
-    header {
-        height: 90px !important;
+/* ============================================
+   GAME SECTION - MOBILE OPTIMIZED
+   ============================================ */
+@media screen and (max-width: 768px) {
+    #game {
+        background: #0A0A0A !important;
+        padding: 60px 20px !important;
     }
     
-    body {
-        padding-top: 110px !important;
+    #game h2 {
+        color: #FFD700 !important;
+        font-size: 2rem !important;
+        text-align: center !important;
+        margin-bottom: 2rem !important;
+        opacity: 1 !important;
+        visibility: visible !important;
     }
     
-    .header-content {
-        height: 90px !important;
+    .game-container {
+        background: #000 !important;
+        border: 2px solid #FFD700 !important;
+        border-radius: 20px !important;
+        padding: 20px !important;
+        text-align: center !important;
+        box-shadow: 0 10px 40px rgba(255, 215, 0, 0.3) !important;
     }
     
-    .logo {
-        width: 35px !important;
-        height: 35px !important;
-    }
-    
-    .site-title {
+    .play-button {
+        background: linear-gradient(45deg, #FFD700, #FFA500) !important;
+        color: #000 !important;
+        border: none !important;
+        padding: 20px 40px !important;
         font-size: 1.3rem !important;
+        font-weight: bold !important;
+        border-radius: 50px !important;
+        cursor: pointer !important;
+        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.5) !important;
+        transition: all 0.3s ease !important;
+        display: inline-block !important;
+        margin: 20px auto !important;
     }
     
-    .tagline {
-        font-size: 0.6rem !important;
+    .play-button:active {
+        transform: translateY(2px) !important;
+        box-shadow: 0 3px 10px rgba(255, 215, 0, 0.5) !important;
+    }
+}
+
+/* ============================================
+   PURCHASE SECTION - MOBILE OPTIMIZED
+   ============================================ */
+@media screen and (max-width: 768px) {
+    #purchase {
+        background: #000 !important;
+        padding: 60px 20px !important;
     }
     
-    .stat-number {
+    .purchase-form {
+        background: rgba(255, 215, 0, 0.05) !important;
+        border: 2px solid #FFD700 !important;
+        border-radius: 20px !important;
+        padding: 30px 20px !important;
+        max-width: 100% !important;
+    }
+    
+    .form-group {
+        margin-bottom: 20px !important;
+    }
+    
+    .form-group label {
+        display: block !important;
+        color: #FFD700 !important;
+        font-weight: bold !important;
+        margin-bottom: 8px !important;
         font-size: 1rem !important;
     }
     
-    #totalTokens {
-        font-size: 0.85rem !important;
+    .form-group input,
+    .form-group select {
+        width: 100% !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 2px solid #FFD700 !important;
+        color: #FFF !important;
+        padding: 12px 15px !important;
+        border-radius: 10px !important;
+        font-size: 1rem !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none !important;
+        border-color: #FFA500 !important;
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.5) !important;
+    }
+    
+    .submit-button {
+        width: 100% !important;
+        background: linear-gradient(45deg, #FFD700, #FFA500) !important;
+        color: #000 !important;
+        border: none !important;
+        padding: 15px !important;
+        font-size: 1.2rem !important;
+        font-weight: bold !important;
+        border-radius: 10px !important;
+        cursor: pointer !important;
+        box-shadow: 0 4px 20px rgba(255, 215, 0, 0.5) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .submit-button:active {
+        transform: translateY(2px) !important;
+        box-shadow: 0 2px 10px rgba(255, 215, 0, 0.5) !important;
+    }
+}
+
+/* ============================================
+   FOOTER - MOBILE OPTIMIZED
+   ============================================ */
+@media screen and (max-width: 768px) {
+    footer {
+        background: #000 !important;
+        border-top: 2px solid #FFD700 !important;
+        padding: 30px 20px !important;
+        text-align: center !important;
+    }
+    
+    footer p {
+        color: #AAA !important;
+        font-size: 0.9rem !important;
+        margin: 5px 0 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    footer a {
+        color: #FFD700 !important;
+        text-decoration: none !important;
+    }
+}
+
+/* ============================================
+   ANIMATIONS - MOBILE SAFE
+   ============================================ */
+@media screen and (max-width: 768px) {
+    @keyframes pulse {
+        0%, 100% { opacity: 0.1; transform: scale(1); }
+        50% { opacity: 0.2; transform: scale(1.1); }
+    }
+    
+    @keyframes goldGlow {
+        0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+        50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.8); }
+    }
+    
+    .glow-effect {
+        animation: goldGlow 2s ease-in-out infinite !important;
+    }
+}
+
+/* ============================================
+   UTILITY CLASSES - MOBILE
+   ============================================ */
+@media screen and (max-width: 768px) {
+    .mobile-only {
+        display: block !important;
+    }
+    
+    .desktop-only {
+        display: none !important;
+    }
+    
+    .text-center-mobile {
+        text-align: center !important;
+    }
+    
+    .mt-mobile-20 {
+        margin-top: 20px !important;
+    }
+    
+    .mb-mobile-20 {
+        margin-bottom: 20px !important;
+    }
+}
+
+/* ============================================
+   CRITICAL OVERRIDES - NUCLEAR OPTIONS
+   ============================================ */
+@media screen and (max-width: 768px) {
+    /* Force ALL text elements to be visible */
+    body * {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Specific targeting for problem areas */
+    #stats > .container > *:first-child,
+    section#stats > .container > h2,
+    .mint-status-text,
+    h2:contains("LIVE"),
+    h2:contains("MINT"),
+    h2:contains("STATUS") {
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        color: #FFD700 !important;
+        font-size: 2rem !important;
+        text-align: center !important;
+        margin-bottom: 2rem !important;
+        position: relative !important;
+        z-index: 9999 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    
+    /* Remove all transforms that might hide elements */
+    * {
+        transform: none !important;
+    }
+    
+    /* Ensure containers don't hide content */
+    .container,
+    .section-container,
+    .content-wrapper {
+        overflow: visible !important;
+    }
+}
+
+/* ============================================
+   IPHONE SPECIFIC FIXES
+   ============================================ */
+@media screen and (max-width: 414px) {
+    .hero h1 {
+        font-size: 2rem !important;
+    }
+    
+    .section-title {
+        font-size: 1.5rem !important;
+    }
+    
+    .stat-card {
+        padding: 15px !important;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 1.5rem !important;
+    }
+}
+
+/* ============================================
+   LANDSCAPE MODE ADJUSTMENTS
+   ============================================ */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .hero {
+        min-height: auto !important;
+        padding: 80px 20px 40px !important;
+    }
+    
+    header {
+        height: 50px !important;
+    }
+    
+    .hero h1 {
+        font-size: 2rem !important;
     }
 }
