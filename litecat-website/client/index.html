@@ -21,8 +21,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     
-    <!-- Responsive Technical Fixes -->
-    <link rel="stylesheet" href="styles/responsive-fixes.css">
+    <!-- Mobile Optimized CSS -->
+    <link rel="stylesheet" href="css/mobile-optimized.css">
     
     <style>
         :root {
@@ -277,7 +277,7 @@
 
         /* Stats Section */
         .stats-section {
-            padding-top: 150px;
+            padding-top: 120px;
             background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 0, 0.02) 100%);
         }
 
@@ -1089,6 +1089,8 @@
                 display: none;
             }
         }
+
+
     </style>
 </head>
 <body>
@@ -1120,9 +1122,46 @@
                             </svg>
                         </a>
                     </nav>
+                    <!-- Mobile Menu Toggle -->
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
                 </div>
             </div>
         </header>
+        
+        <!-- Mobile Navigation Drawer -->
+        <nav class="mobile-nav" id="mobileNav">
+            <div class="mobile-nav-header">
+                <img src="logo.jpg" alt="RGBLightCat" class="mobile-nav-logo">
+                <button class="mobile-nav-close" id="mobileNavClose">×</button>
+            </div>
+            <div class="mobile-nav-links">
+                <a href="#stats" onclick="closeMobileNav()">Live Stats</a>
+                <a href="#game" onclick="closeMobileNav()">Play Game</a>
+                <a href="#purchase" onclick="closeMobileNav()">Buy LIGHTCAT</a>
+                <a href="tokenomics.html">Tokenomics</a>
+                <a href="https://twitter.com/RGBLightCat" target="_blank" rel="noopener noreferrer">
+                    Follow @RGBLightCat
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--yellow)" style="margin-left: 5px;">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </a>
+            </div>
+            <!-- Quick Batch Selection for Mobile -->
+            <div class="mobile-quick-select">
+                <h3>Quick Selection</h3>
+                <div class="quick-select-buttons">
+                    <button class="quick-select-btn" data-batches="5">5 Batches</button>
+                    <button class="quick-select-btn" data-batches="10">10 Batches</button>
+                    <button class="quick-select-btn" data-batches="20">20 Batches</button>
+                    <button class="quick-select-btn" data-batches="30">30 Batches</button>
+                </div>
+            </div>
+        </nav>
+        <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
 
         <section id="stats" class="stats-section">
             <div class="container">
@@ -2379,5 +2418,85 @@
     
     <!-- QR Scanner Implementation -->
     <script src="js/qr-scanner.js"></script>
+    
+    <!-- Mobile Menu Script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mobile Menu Functionality
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileNav = document.getElementById('mobileNav');
+        const mobileNavClose = document.getElementById('mobileNavClose');
+        const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+        const quickSelectBtns = document.querySelectorAll('.quick-select-btn');
+        
+        console.log('Mobile menu elements:', {
+            toggle: mobileMenuToggle,
+            nav: mobileNav,
+            close: mobileNavClose,
+            overlay: mobileNavOverlay
+        });
+        
+        function openMobileNav() {
+            mobileNav.classList.add('open');
+            mobileNavOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeMobileNav() {
+            mobileNav.classList.remove('open');
+            mobileNavOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        
+        // Make functions globally available
+        window.openMobileNav = openMobileNav;
+        window.closeMobileNav = closeMobileNav;
+        
+        // Event Listeners
+        if (mobileMenuToggle) {
+            console.log('Mobile menu toggle found:', mobileMenuToggle);
+            mobileMenuToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Mobile menu clicked!');
+                openMobileNav();
+            });
+        } else {
+            console.log('Mobile menu toggle NOT found!');
+        }
+        
+        if (mobileNavClose) {
+            mobileNavClose.addEventListener('click', closeMobileNav);
+        }
+        
+        if (mobileNavOverlay) {
+            mobileNavOverlay.addEventListener('click', closeMobileNav);
+        }
+        
+        // Quick select buttons
+        quickSelectBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const batches = parseInt(this.getAttribute('data-batches'));
+                const batchInput = document.getElementById('batchAmount');
+                if (batchInput) {
+                    batchInput.value = batches;
+                    // Update the display
+                    const changeEvent = new Event('input', { bubbles: true });
+                    batchInput.dispatchEvent(changeEvent);
+                }
+                closeMobileNav();
+                // Scroll to purchase section
+                document.getElementById('purchase').scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+        
+        // Close on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && mobileNav.classList.contains('open')) {
+                closeMobileNav();
+            }
+        });
+    }); // End of DOMContentLoaded
+    </script>
 </body>
 </html>
